@@ -3,31 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Indonesia Strategic Map - Mobile Optimized</title>
+    <title>Indonesia Social Vision 2024 - Interactive Infographic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050506;
+            --bg: #050507;
             --accent: #0A84FF;
-            --glass: rgba(22, 22, 23, 0.8);
-            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(20, 20, 25, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
         }
 
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background-color: var(--bg);
+        body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            color: white;
-            touch-action: none; /* Mencegah scroll default browser */
+            background-color: var(--bg);
+            color: #f5f5f7;
+            overflow: hidden;
+            height: 100vh;
+            touch-action: none;
         }
 
-        .ambient-bg {
+        /* Animated Mesh Gradient Background */
+        .mesh-bg {
             position: fixed; inset: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(10, 132, 255, 0.08) 0%, transparent 70%);
+            background: 
+                radial-gradient(at 0% 0%, rgba(10, 132, 255, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(191, 90, 242, 0.1) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(48, 209, 88, 0.05) 0px, transparent 50%);
+            filter: blur(80px);
             z-index: -1;
         }
 
@@ -38,144 +42,206 @@
             border: 1px solid var(--border);
         }
 
-        #canvas-container {
-            position: absolute;
-            width: 100%; height: 100%;
-            cursor: grab;
-            transform-origin: 0 0;
-            will-change: transform;
+        /* Infographic Card Styling */
+        .info-card {
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
         }
 
-        .node {
-            position: absolute;
-            transition: border-color 0.3s, box-shadow 0.3s;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
+        .info-card:hover {
+            transform: scale(1.05) translateY(-10px);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
         }
 
-        .node-content {
-            padding: 12px 16px;
-            border-radius: 18px;
-            text-align: center;
-            min-width: 120px;
-            font-size: 11px;
-            font-weight: 600;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .line-connector {
+        /* Animated Flowing Lines */
+        .flow-line {
             fill: none;
-            stroke-width: 1.5;
-            opacity: 0.15;
+            stroke-width: 2;
+            stroke-dasharray: 10, 15;
+            animation: flow 30s linear infinite;
+            opacity: 0.3;
         }
 
-        /* Drawer Responsive */
+        @keyframes flow {
+            from { stroke-dashoffset: 500; }
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* Dashboard UI */
+        .dashboard-item {
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .dashboard-item:last-child { border-right: none; }
+
         #detail-drawer {
-            position: fixed;
-            top: 0; right: 0; bottom: 0;
-            width: 100%; /* Default Mobile */
-            max-width: 500px; /* Desktop */
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             transform: translateX(100%);
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 1000;
         }
-
         #detail-drawer.open { transform: translateX(0); }
 
-        .custom-scroll::-webkit-scrollbar { width: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
-
-        /* Search Bar Mobile */
-        .search-container {
-            position: fixed;
-            top: 20px; left: 50%;
-            transform: translateX(-50%);
-            width: 90%; max-width: 500px;
-            z-index: 500;
+        .impact-bar {
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.1);
+            overflow: hidden;
         }
 
-        .focus-mode .ui-el { opacity: 0; pointer-events: none; }
+        .impact-fill {
+            height: 100%;
+            transition: width 1.5s ease-out;
+        }
+
+        /* Focus Mode */
+        .focus-mode .ui-hide { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div class="ambient-bg"></div>
+    <div class="mesh-bg"></div>
 
-    <!-- Search Bar -->
-    <div class="search-container ui-el">
-        <div class="apple-glass rounded-2xl p-2 flex items-center gap-3 shadow-2xl">
-            <div class="pl-3 text-zinc-500"><i data-lucide="search" class="w-4 h-4"></i></div>
-            <input type="text" id="search-input" placeholder="Cari isu (misal: Judol, Polusi)..." 
-                   class="bg-transparent border-none outline-none w-full py-1 text-sm text-white">
-            <button id="focus-btn" class="p-2 hover:bg-white/10 rounded-xl">
-                <i data-lucide="maximize" class="w-4 h-4 text-zinc-400"></i>
-            </button>
+    <!-- Top Header -->
+    <header class="ui-hide fixed top-6 left-0 right-0 z-[100] px-6">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <i data-lucide="activity" class="text-white w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-black tracking-tighter">INDONESIA VISION</h1>
+                    <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Social Health Index 2024</p>
+                </div>
+            </div>
+            <div class="apple-glass px-4 py-2 rounded-2xl flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-zinc-400">LIVE DATA SYNC</span>
+                </div>
+                <button id="focus-btn" class="p-1 hover:bg-white/10 rounded-lg transition-all">
+                    <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                </button>
+            </div>
         </div>
-    </div>
+    </header>
 
     <!-- Main Canvas -->
     <main id="viewport" class="relative w-full h-full overflow-hidden">
-        <div id="canvas-container">
+        <div id="canvas-container" class="absolute inset-0 flex items-center justify-center">
             <svg id="svg-layer" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
-            <div id="nodes-layer"></div>
+            <div id="nodes-layer" class="relative"></div>
         </div>
     </main>
 
-    <!-- Mobile Controls -->
-    <div class="ui-el fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-        <button onclick="resetMap()" class="apple-glass p-4 rounded-full shadow-xl active:scale-90 transition-all">
-            <i data-lucide="refresh-cw" class="w-6 h-6"></i>
-        </button>
-    </div>
-
-    <!-- Side Panel -->
-    <aside id="detail-drawer" class="apple-glass flex flex-col">
-        <div class="p-6 border-b border-white/10 flex justify-between items-center">
-            <h2 id="drawer-title" class="text-xl font-bold">Detail Isu</h2>
-            <button id="close-drawer" class="p-3 bg-white/5 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button>
+    <!-- Bottom Dashboard (Infographic Style) -->
+    <footer class="ui-hide fixed bottom-6 left-6 right-6 z-[100]">
+        <div class="max-w-5xl mx-auto apple-glass rounded-[2.5rem] p-6 shadow-2xl flex flex-wrap md:flex-nowrap items-center justify-between gap-6">
+            <div class="dashboard-item px-6 flex-1 min-w-[150px]">
+                <p class="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Target Kemiskinan</p>
+                <div class="flex items-end gap-2">
+                    <span class="text-2xl font-bold">9.36%</span>
+                    <span class="text-[10px] text-green-400 font-bold mb-1">↓ 0.2%</span>
+                </div>
+            </div>
+            <div class="dashboard-item px-6 flex-1 min-w-[150px]">
+                <p class="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Indeks Persepsi Korupsi</p>
+                <div class="flex items-end gap-2">
+                    <span class="text-2xl font-bold">34</span>
+                    <span class="text-[10px] text-red-400 font-bold mb-1">STAGNAN</span>
+                </div>
+            </div>
+            <div class="dashboard-item px-6 flex-1 min-w-[150px]">
+                <p class="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Kualitas Udara (AQI)</p>
+                <div class="flex items-end gap-2">
+                    <span class="text-2xl font-bold">156</span>
+                    <span class="text-[10px] text-orange-400 font-bold mb-1">UNHEALTHY</span>
+                </div>
+            </div>
+            <div class="px-6">
+                <button onclick="resetMap()" class="bg-white text-black px-6 py-3 rounded-2xl font-bold text-xs hover:bg-zinc-200 transition-all active:scale-95 shadow-xl">
+                    RESET VIEW
+                </button>
+            </div>
         </div>
-        <div id="drawer-content" class="flex-1 overflow-y-auto p-8 custom-scroll space-y-8">
+    </footer>
+
+    <!-- Side Detail Panel -->
+    <aside id="detail-drawer" class="fixed top-0 right-0 h-full w-full max-w-xl apple-glass z-[200] shadow-2xl flex flex-col">
+        <div class="p-8 border-b border-white/5 flex justify-between items-center">
+            <div id="drawer-header">
+                <span id="drawer-tag" class="text-[10px] font-black tracking-widest text-blue-400 uppercase">ANALISIS</span>
+                <h2 id="drawer-title" class="text-2xl font-bold mt-1">Judul Isu</h2>
+            </div>
+            <button id="close-drawer" class="p-4 hover:bg-white/10 rounded-full transition-all">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div id="drawer-content" class="flex-1 overflow-y-auto p-10 space-y-10">
             <!-- Content -->
         </div>
     </aside>
 
     <script>
-        // --- DATA ---
-        const mindData = {
-            id: "root", label: "INDONESIA\n2024",
+        // --- DATA INFOGRAFIS ---
+        const socialData = {
+            id: "root", label: "INDONESIA\nSOCIAL HUB",
             children: [
                 {
-                    label: "Ekonomi Digital", color: "#0A84FF",
+                    label: "Ekonomi & Digital", color: "#0A84FF", icon: "zap",
                     children: [
-                        { label: "Judi Online", stats: "Rp 327 Triliun perputaran uang", causes: ["Akses pinjol mudah", "Literasi rendah"], solutions: ["Blokir IP", "Satgas Terpadu"] },
-                        { label: "Pengangguran Gen Z", stats: "9,9 Juta NEET", causes: ["Mismatch skill", "Otomasi AI"], solutions: ["Link & Match SMK", "Insentif Pajak"] }
+                        { 
+                            label: "Judi Online", impact: 95, icon: "smartphone",
+                            desc: "Ancaman destruktif terhadap ekonomi mikro keluarga Indonesia.",
+                            stats: "Rp 327 Triliun uang rakyat tersedot ke bandar luar negeri.",
+                            causes: ["Pinjol ilegal sebagai modal", "Algoritma promosi agresif"],
+                            solutions: ["Pemutusan akses payment gateway", "Edukasi literasi keuangan digital"]
+                        },
+                        { 
+                            label: "Pengangguran Gen Z", impact: 80, icon: "users",
+                            desc: "Mismatch antara lulusan pendidikan dengan kebutuhan industri 4.0.",
+                            stats: "9.9 Juta anak muda masuk kategori NEET (Not in Education/Employment).",
+                            solutions: ["Revitalisasi SMK Berbasis AI", "Subsidi magang industri"]
+                        }
                     ]
                 },
                 {
-                    label: "Lingkungan", color: "#30D158",
+                    label: "Lingkungan Hidup", color: "#30D158", icon: "leaf",
                     children: [
-                        { label: "Polusi Jakarta", stats: "IQ terancam turun", causes: ["PLTU Batubara", "Kendaraan pribadi"], solutions: ["Bus Listrik", "Pajak Emisi"] },
-                        { label: "Mafia Tanah", stats: "Konflik agraria masif", causes: ["Sertifikat manual", "Oknum birokrasi"], solutions: ["Sertifikat Digital", "Satgas Mafia"] }
+                        { 
+                            label: "Polusi Udara", impact: 88, icon: "wind",
+                            desc: "Krisis kesehatan pernapasan di kota-kota besar akibat emisi.",
+                            stats: "Jakarta menduduki peringkat 1 kota paling berpolusi di dunia secara berkala.",
+                            solutions: ["Konversi transportasi publik ke listrik", "Pajak karbon industri"]
+                        },
+                        { 
+                            label: "Krisis Pangan", impact: 75, icon: "utensils",
+                            desc: "Alih fungsi lahan subur menjadi beton industri.",
+                            solutions: ["Proteksi lahan pertanian abadi", "Modernisasi pertanian presisi"]
+                        }
                     ]
                 },
                 {
-                    label: "Hukum & Etika", color: "#FF9F0A",
+                    label: "Hukum & Etika", color: "#FF9F0A", icon: "shield",
                     children: [
-                        { label: "Dinasti Politik", stats: "IPK turun ke 34", causes: ["Biaya politik mahal", "Etika lemah"], solutions: ["UU Perampasan Aset", "Batasi Nepotisme"] },
-                        { label: "Kebocoran Data", stats: "Data PDN diretas", causes: ["Server lemah", "SDM IT minim"], solutions: ["Audit Siber", "Sovereign Cloud"] }
+                        { 
+                            label: "Korupsi Politik", impact: 98, icon: "gavel",
+                            desc: "Melemahnya integritas lembaga negara akibat politik dinasti.",
+                            stats: "Skor IPK Indonesia terendah dalam dekade terakhir.",
+                            solutions: ["UU Perampasan Aset Koruptor", "Sistem seleksi pejabat meritokratis"]
+                        },
+                        { 
+                            label: "Cyber Security", impact: 82, icon: "lock",
+                            desc: "Rapuhnya perlindungan data pribadi warga negara.",
+                            solutions: ["Kedaulatan Cloud Nasional", "Audit siber berkala instansi vital"]
+                        }
                     ]
                 }
             ]
         };
 
-        // --- ENGINE STATE ---
-        let scale = 0.8;
-        let posX = window.innerWidth / 2;
-        let posY = window.innerHeight / 2;
-        let isDragging = false;
-        let lastTouchX, lastTouchY;
-        let initialPinchDist = null;
+        // --- ENGINE ---
+        let scale = 0.8, posX = window.innerWidth / 2, posY = window.innerHeight / 2;
+        let isDragging = false, lastTouchX, lastTouchY, initialPinchDist = null;
 
         const container = document.getElementById('canvas-container');
         const nodesLayer = document.getElementById('nodes-layer');
@@ -184,7 +250,7 @@
         function init() {
             lucide.createIcons();
             render();
-            setupTouchEvents();
+            setupInteractions();
             updateTransform();
         }
 
@@ -192,129 +258,115 @@
             nodesLayer.innerHTML = '';
             svgLayer.innerHTML = '';
             
-            // Root
-            createNode(mindData, 0, 0, true);
+            // Root Node
+            createNode(socialData, 0, 0, true);
 
-            const clusterRadius = window.innerWidth < 600 ? 180 : 300;
-            const issueRadius = window.innerWidth < 600 ? 120 : 200;
+            const clusterRadius = window.innerWidth < 768 ? 200 : 350;
+            const issueRadius = window.innerWidth < 768 ? 140 : 220;
 
-            mindData.children.forEach((cluster, i) => {
-                const angle = (i * 2 * Math.PI) / mindData.children.length;
+            socialData.children.forEach((cluster, i) => {
+                const angle = (i * 2 * Math.PI) / socialData.children.length;
                 const cx = Math.cos(angle) * clusterRadius;
                 const cy = Math.sin(angle) * clusterRadius;
 
                 createNode(cluster, cx, cy, false, cluster.color);
-                drawLink(0, 0, cx, cy, cluster.color);
+                drawFlowLine(0, 0, cx, cy, cluster.color);
 
                 cluster.children.forEach((issue, j) => {
-                    const subAngle = angle - 0.4 + (j * 0.4);
+                    const subAngle = angle - 0.5 + (j * 0.5);
                     const ix = cx + Math.cos(subAngle) * issueRadius;
                     const iy = cy + Math.sin(subAngle) * issueRadius;
 
                     createNode(issue, ix, iy, false);
-                    drawLink(cx, cy, ix, iy, cluster.color);
+                    drawFlowLine(cx, cy, ix, iy, cluster.color);
                 });
             });
+            lucide.createIcons();
         }
 
         function createNode(node, x, y, isRoot, color) {
             const div = document.createElement('div');
-            div.className = 'node';
+            div.className = `node absolute info-card apple-glass p-4 rounded-3xl min-w-[160px]`;
             div.style.left = `${x}px`;
             div.style.top = `${y}px`;
+            div.style.transform = `translate(-50%, -50%)`;
 
-            const content = document.createElement('div');
-            content.className = 'node-content apple-glass';
-            if(isRoot) content.style.border = '2px solid var(--accent)';
-            if(color) content.style.color = color;
-            content.innerText = node.label;
+            let innerHTML = '';
+            if(isRoot) {
+                innerHTML = `
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                            <i data-lucide="globe" class="text-white w-6 h-6"></i>
+                        </div>
+                        <span class="font-black text-xs tracking-tighter">${node.label}</span>
+                    </div>`;
+            } else {
+                innerHTML = `
+                    <div class="flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background: ${color ? color+'22' : '#ffffff11'}">
+                                <i data-lucide="${node.icon || 'circle'}" class="w-4 h-4" style="color: ${color || '#fff'}"></i>
+                            </div>
+                            ${node.impact ? `<span class="text-[9px] font-black text-zinc-500">${node.impact}% IMPACT</span>` : ''}
+                        </div>
+                        <div class="text-left">
+                            <p class="text-[10px] font-bold leading-tight">${node.label}</p>
+                            ${node.impact ? `
+                                <div class="impact-bar mt-2">
+                                    <div class="impact-fill" style="width: ${node.impact}%; background: ${color || '#fff'}"></div>
+                                </div>` : ''}
+                        </div>
+                    </div>`;
+            }
 
-            div.appendChild(content);
-            div.onclick = () => { if(!isDragging) openDrawer(node); };
+            div.innerHTML = innerHTML;
+            div.onclick = (e) => {
+                e.stopPropagation();
+                if(!isDragging && !isRoot) openDrawer(node, color);
+            };
             nodesLayer.appendChild(div);
         }
 
-        function drawLink(x1, y1, x2, y2, color) {
-            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", x1); line.setAttribute("y1", y1);
-            line.setAttribute("x2", x2); line.setAttribute("y2", y2);
-            line.setAttribute("class", "line-connector");
-            line.setAttribute("stroke", color || "white");
-            svgLayer.appendChild(line);
+        function drawFlowLine(x1, y1, x2, y2, color) {
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            const startX = window.innerWidth / 2 + x1;
+            const startY = window.innerHeight / 2 + y1;
+            const endX = window.innerWidth / 2 + x2;
+            const endY = window.innerHeight / 2 + y2;
+
+            const midX = (startX + endX) / 2;
+            const d = `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`;
+            
+            path.setAttribute("d", d);
+            path.setAttribute("class", "flow-line");
+            path.setAttribute("stroke", color || "#ffffff");
+            svgLayer.appendChild(path);
         }
 
-        // --- TOUCH & GESTURE ENGINE ---
-        function setupTouchEvents() {
-            // Mouse Wheel (Desktop)
-            window.addEventListener('wheel', e => {
-                if(e.target.closest('#detail-drawer')) return;
-                e.preventDefault();
-                const delta = e.deltaY * -0.001;
-                applyZoom(delta, e.clientX, e.clientY);
-            }, { passive: false });
-
-            // Touch Start
-            window.addEventListener('touchstart', e => {
-                if(e.target.closest('#detail-drawer') || e.target.closest('.ui-el')) return;
-                isDragging = true;
-                if(e.touches.length === 1) {
-                    lastTouchX = e.touches[0].clientX;
-                    lastTouchY = e.touches[0].clientY;
-                } else if(e.touches.length === 2) {
-                    initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                }
-            }, { passive: false });
-
-            // Touch Move
-            window.addEventListener('touchmove', e => {
-                if(e.target.closest('#detail-drawer')) return;
-                e.preventDefault();
-
-                if(e.touches.length === 1 && isDragging) {
-                    const dx = e.touches[0].clientX - lastTouchX;
-                    const dy = e.touches[0].clientY - lastTouchY;
-                    posX += dx; posY += dy;
-                    lastTouchX = e.touches[0].clientX;
-                    lastTouchY = e.touches[0].clientY;
-                } else if(e.touches.length === 2) {
-                    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                    const delta = (dist - initialPinchDist) * 0.005;
-                    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                    applyZoom(delta, midX, midY);
-                    initialPinchDist = dist;
-                }
-                updateTransform();
-            }, { passive: false });
-
-            window.addEventListener('touchend', () => { isDragging = false; initialPinchDist = null; });
-        }
-
-        function applyZoom(delta, centerX, centerY) {
-            const oldScale = scale;
-            scale = Math.min(Math.max(0.3, scale + delta), 3);
-            const ratio = scale / oldScale;
-            posX = centerX - (centerX - posX) * ratio;
-            posY = centerY - (centerY - posY) * ratio;
-            updateTransform();
-        }
-
-        function updateTransform() {
-            container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
-        }
-
-        function openDrawer(node) {
-            if(!node.causes && !node.solutions) return;
+        function openDrawer(node, color) {
             const drawer = document.getElementById('detail-drawer');
             document.getElementById('drawer-title').innerText = node.label;
+            document.getElementById('drawer-tag').style.color = color || '#0A84FF';
             
             let html = `
-                <div class="space-y-6">
-                    ${node.stats ? `<div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20"><p class="text-xs text-blue-400 font-bold uppercase mb-1">Statistik</p><p class="text-lg font-bold">${node.stats}</p></div>` : ''}
-                    <div><p class="text-xs text-zinc-500 font-bold uppercase mb-3">Akar Masalah</p>
-                    <ul class="space-y-2">${(node.causes || []).map(c => `<li class="flex gap-2 text-sm text-zinc-300"><i data-lucide="alert-circle" class="w-4 h-4 text-red-500 shrink-0"></i>${c}</li>`).join('')}</ul></div>
-                    <div><p class="text-xs text-green-500 font-bold uppercase mb-3">Solusi Strategis</p>
-                    <ul class="space-y-2">${(node.solutions || []).map(s => `<li class="flex gap-2 text-sm text-zinc-100 font-medium"><i data-lucide="check-circle" class="w-4 h-4 text-green-500 shrink-0"></i>${s}</li>`).join('')}</ul></div>
+                <div class="space-y-10">
+                    <p class="text-xl text-zinc-300 leading-relaxed">${node.desc || "Analisis mendalam mengenai dampak sosial dan struktural di Indonesia."}</p>
+                    
+                    ${node.stats ? `
+                        <div class="p-8 rounded-[2rem] bg-white/[0.03] border border-white/5">
+                            <h4 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Data Statistik</h4>
+                            <p class="text-2xl font-bold">${node.stats}</p>
+                        </div>` : ''}
+
+                    <div class="grid gap-6">
+                        <h4 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Roadmap Solusi</h4>
+                        ${(node.solutions || []).map((s, i) => `
+                            <div class="flex gap-5 items-center p-6 apple-glass rounded-3xl border-white/5 hover:border-white/20 transition-all">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm" style="background: ${color}22; color: ${color}">${i+1}</div>
+                                <p class="text-sm font-bold text-zinc-200">${s}</p>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>`;
             
             document.getElementById('drawer-content').innerHTML = html;
@@ -322,21 +374,66 @@
             drawer.classList.add('open');
         }
 
-        function resetMap() {
-            scale = 0.8;
-            posX = window.innerWidth / 2;
-            posY = window.innerHeight / 2;
+        // --- INTERACTION ENGINE ---
+        function setupInteractions() {
+            // Zoom Wheel
+            window.addEventListener('wheel', e => {
+                if(e.target.closest('#detail-drawer')) return;
+                e.preventDefault();
+                applyZoom(e.deltaY * -0.001, e.clientX, e.clientY);
+            }, { passive: false });
+
+            // Touch
+            window.addEventListener('touchstart', e => {
+                if(e.target.closest('.apple-glass') || e.target.closest('.node')) return;
+                isDragging = true;
+                if(e.touches.length === 1) {
+                    lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
+                } else if(e.touches.length === 2) {
+                    initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                }
+            });
+
+            window.addEventListener('touchmove', e => {
+                if(e.target.closest('#detail-drawer')) return;
+                e.preventDefault();
+                if(e.touches.length === 1 && isDragging) {
+                    posX += e.touches[0].clientX - lastTouchX;
+                    posY += e.touches[0].clientY - lastTouchY;
+                    lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
+                } else if(e.touches.length === 2) {
+                    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    applyZoom((dist - initialPinchDist) * 0.005, (e.touches[0].clientX + e.touches[1].clientX)/2, (e.touches[0].clientY + e.touches[1].clientY)/2);
+                    initialPinchDist = dist;
+                }
+                updateTransform();
+            }, { passive: false });
+
+            window.addEventListener('touchend', () => { isDragging = false; initialPinchDist = null; });
+            
+            document.getElementById('close-drawer').onclick = () => document.getElementById('detail-drawer').classList.remove('open');
+            document.getElementById('focus-btn').onclick = () => document.body.classList.toggle('focus-mode');
+        }
+
+        function applyZoom(delta, cx, cy) {
+            const oldScale = scale;
+            scale = Math.min(Math.max(0.3, scale + delta), 3);
+            const ratio = scale / oldScale;
+            posX = cx - (cx - posX) * ratio;
+            posY = cy - (cy - posY) * ratio;
             updateTransform();
         }
 
-        document.getElementById('close-drawer').onclick = () => document.getElementById('detail-drawer').classList.remove('open');
-        document.getElementById('focus-btn').onclick = () => document.body.classList.toggle('focus-mode');
+        function updateTransform() {
+            container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+        }
 
-        window.addEventListener('resize', () => {
-            resetMap();
-            render();
-        });
+        function resetMap() {
+            scale = 0.8; posX = window.innerWidth / 2; posY = window.innerHeight / 2;
+            updateTransform();
+        }
 
+        window.addEventListener('resize', () => { render(); resetMap(); });
         init();
     </script>
 </body>
