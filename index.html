@@ -3,117 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Indonesia Social Engine - Unified Experience</title>
+    <title>Indonesia Social Visionary - Ultimate Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050507;
+            --bg: #030305;
             --accent: #0A84FF;
-            --glass: rgba(20, 20, 25, 0.8);
-            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(15, 15, 20, 0.85);
+            --border: rgba(255, 255, 255, 0.12);
         }
 
         body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background-color: var(--bg);
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: white;
-            touch-action: none; /* Crucial for custom gesture handling */
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; background-color: var(--bg);
+            font-family: 'Plus Jakarta Sans', sans-serif; color: white;
+            touch-action: none;
         }
 
-        .ambient-bg {
-            position: fixed; inset: 0;
+        /* --- Background Visuals --- */
+        .ambient-canvas {
+            position: fixed; inset: 0; z-index: -1;
             background: 
-                radial-gradient(circle at 20% 20%, rgba(10, 132, 255, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(48, 209, 88, 0.1) 0%, transparent 40%);
-            z-index: -1;
+                radial-gradient(circle at 10% 10%, rgba(10, 132, 255, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(191, 90, 242, 0.12) 0%, transparent 40%);
         }
 
+        .particles {
+            position: fixed; inset: 0; z-index: -1;
+            background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+
+        /* --- Apple Glassmorphism --- */
         .apple-glass {
             background: var(--glass);
-            backdrop-filter: blur(30px) saturate(180%);
-            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
             border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
-        /* Canvas & Interaction */
-        #viewport {
-            width: 100vw;
-            height: 100vh;
-            cursor: grab;
-            overflow: hidden;
-            position: relative;
-        }
-
+        /* --- Interactive Canvas --- */
+        #viewport { width: 100vw; height: 100vh; cursor: grab; position: relative; }
         #viewport:active { cursor: grabbing; }
+        #canvas-container { position: absolute; transform-origin: 0 0; will-change: transform; pointer-events: none; }
 
-        #canvas-container {
-            position: absolute;
-            transform-origin: 0 0;
-            will-change: transform;
-            pointer-events: none; /* Children will re-enable pointer events */
-        }
-
-        .node {
-            position: absolute;
-            pointer-events: auto;
-            transition: transform 0.2s ease-out;
-        }
-
+        .node { position: absolute; pointer-events: auto; perspective: 1000px; }
         .node-card {
-            width: 180px;
-            padding: 16px;
-            border-radius: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 200px; padding: 20px; border-radius: 28px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
         .node-card:hover {
-            transform: translateY(-5px) scale(1.05);
-            border-color: rgba(255,255,255,0.3);
+            transform: translateY(-10px) rotateX(5deg) rotateY(5deg);
+            border-color: var(--accent);
+            box-shadow: 0 30px 60px rgba(10, 132, 255, 0.2);
         }
 
-        /* Animated Lines */
+        /* --- Glowing Lines --- */
         .flow-line {
-            fill: none;
-            stroke-width: 1.5;
-            stroke-dasharray: 8, 12;
-            animation: flowAnim 20s linear infinite;
-            opacity: 0.2;
+            fill: none; stroke-width: 2; stroke-dasharray: 10, 15;
+            animation: dashFlow 20s linear infinite;
+            filter: drop-shadow(0 0 5px rgba(10, 132, 255, 0.3));
         }
+        @keyframes dashFlow { from { stroke-dashoffset: 500; } to { stroke-dashoffset: 0; } }
 
-        @keyframes flowAnim {
-            from { stroke-dashoffset: 400; }
-            to { stroke-dashoffset: 0; }
-        }
-
-        /* Drawer - Same on Mobile & Desktop */
+        /* --- UI Elements --- */
         #detail-drawer {
-            position: fixed;
-            top: 10px; right: 10px; bottom: 10px;
-            width: calc(100% - 20px);
-            max-width: 450px;
-            transform: translateX(120%);
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 1000;
-            border-radius: 32px;
+            position: fixed; top: 15px; right: 15px; bottom: 15px;
+            width: calc(100% - 30px); max-width: 500px;
+            transform: translateX(120%); transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000; border-radius: 35px;
         }
-
         #detail-drawer.open { transform: translateX(0); }
 
-        .impact-bar {
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .impact-fill { height: 100%; transition: width 1s ease-in-out; }
+        .impact-meter { height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+        .impact-fill { height: 100%; transition: width 1.5s ease-out; }
 
         .ui-hide { transition: opacity 0.5s; }
         .focus-mode .ui-hide { opacity: 0; pointer-events: none; }
@@ -121,92 +87,95 @@
 </head>
 <body>
 
-    <div class="ambient-bg"></div>
+    <div class="ambient-canvas"></div>
+    <div class="particles"></div>
 
-    <!-- Header -->
-    <header class="ui-hide fixed top-6 left-6 z-50">
-        <div class="flex items-center gap-4">
-            <div class="apple-glass p-3 rounded-2xl shadow-2xl">
-                <i data-lucide="component" class="w-6 h-6 text-blue-500"></i>
-            </div>
-            <div>
-                <h1 class="text-lg font-black tracking-tighter">INDONESIA SOCIAL ENGINE</h1>
-                <p class="text-[10px] text-zinc-500 font-bold tracking-[0.2em] uppercase">Interactive Infographic v2.0</p>
-            </div>
+    <!-- Header UI -->
+    <header class="ui-hide fixed top-8 left-8 z-50 flex items-center gap-5">
+        <div class="apple-glass p-4 rounded-[1.5rem]">
+            <i data-lucide="layout-grid" class="w-7 h-7 text-blue-500"></i>
+        </div>
+        <div>
+            <h1 class="text-xl font-black tracking-tighter">INDONESIA VISIONARY</h1>
+            <p class="text-[10px] font-bold text-zinc-500 tracking-[0.3em] uppercase">Social Encyclopedia v3.0</p>
         </div>
     </header>
 
     <!-- Main Viewport -->
     <div id="viewport">
         <div id="canvas-container">
-            <svg id="svg-layer" style="position:absolute; top:0; left:0; width:5000px; height:5000px; pointer-events:none;"></svg>
+            <svg id="svg-layer" style="position:absolute; top:-2500px; left:-2500px; width:5000px; height:5000px; pointer-events:none;"></svg>
             <div id="nodes-layer"></div>
         </div>
     </div>
 
-    <!-- Controls -->
-    <div class="ui-hide fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 z-50">
-        <div class="apple-glass p-2 rounded-2xl flex items-center gap-2 shadow-2xl">
-            <button onclick="applyZoom(0.2)" class="p-3 hover:bg-white/10 rounded-xl"><i data-lucide="plus" class="w-5 h-5"></i></button>
-            <button onclick="applyZoom(-0.2)" class="p-3 hover:bg-white/10 rounded-xl"><i data-lucide="minus" class="w-5 h-5"></i></button>
-            <div class="w-px h-6 bg-white/10 mx-1"></div>
-            <button onclick="resetView()" class="p-3 hover:bg-white/10 rounded-xl"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
-            <button id="focus-btn" class="p-3 hover:bg-white/10 rounded-xl"><i data-lucide="eye-off" class="w-5 h-5"></i></button>
+    <!-- Bottom Controls -->
+    <div class="ui-hide fixed bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 z-50">
+        <div class="apple-glass p-2 rounded-[2rem] flex items-center gap-2">
+            <button onclick="applyZoom(0.25)" class="p-4 hover:bg-white/10 rounded-full transition-all"><i data-lucide="plus" class="w-5 h-5"></i></button>
+            <button onclick="applyZoom(-0.25)" class="p-4 hover:bg-white/10 rounded-full transition-all"><i data-lucide="minus" class="w-5 h-5"></i></button>
+            <div class="w-px h-8 bg-white/10 mx-2"></div>
+            <button onclick="resetView()" class="p-4 hover:bg-white/10 rounded-full transition-all"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
+            <button id="focus-btn" class="p-4 hover:bg-white/10 rounded-full transition-all"><i data-lucide="eye-off" class="w-5 h-5"></i></button>
         </div>
     </div>
 
-    <!-- Detail Drawer -->
-    <aside id="detail-drawer" class="apple-glass flex flex-col shadow-2xl">
-        <div class="p-8 border-b border-white/5 flex justify-between items-center">
+    <!-- Side Panel -->
+    <aside id="detail-drawer" class="apple-glass flex flex-col overflow-hidden">
+        <div class="p-10 border-b border-white/5 flex justify-between items-center">
             <div>
-                <span id="drawer-tag" class="text-[10px] font-black tracking-widest text-blue-500 uppercase">Analisis Isu</span>
-                <h2 id="drawer-title" class="text-2xl font-bold mt-1">Judul</h2>
+                <span id="drawer-tag" class="text-[10px] font-black tracking-[0.3em] text-blue-500 uppercase">Analisis Mendalam</span>
+                <h2 id="drawer-title" class="text-3xl font-bold mt-2">Judul</h2>
             </div>
-            <button id="close-drawer" class="p-4 hover:bg-white/10 rounded-full transition-all">
-                <i data-lucide="x" class="w-6 h-6"></i>
-            </button>
+            <button id="close-drawer" class="p-5 hover:bg-white/10 rounded-full"><i data-lucide="x" class="w-7 h-7"></i></button>
         </div>
-        <div id="drawer-content" class="flex-1 overflow-y-auto p-10 space-y-10">
+        <div id="drawer-content" class="flex-1 overflow-y-auto p-10 space-y-12 custom-scroll">
             <!-- Content -->
         </div>
     </aside>
 
     <script>
-        // --- DATA ---
+        // --- DATA ENCYCLOPEDIA ---
         const data = {
-            id: "root", label: "INDONESIA\nHUB",
+            id: "root", label: "INDONESIA\nSOCIAL HUB",
             children: [
                 {
                     label: "Ekonomi & Digital", color: "#0A84FF", icon: "zap",
                     children: [
-                        { label: "Judi Online", impact: 95, stats: "Rp 327 Triliun", causes: ["Pinjol ilegal", "Iklan agresif"], solutions: ["Blokir IP", "Literasi Digital"] },
-                        { label: "Pengangguran Gen Z", impact: 82, stats: "9.9 Juta NEET", causes: ["Mismatch skill", "Otomasi"], solutions: ["Link & Match SMK", "Insentif Startup"] }
+                        { label: "Judi Online", impact: 98, stats: "Rp 327 Triliun", causes: ["Pinjol ilegal", "Algoritma agresif"], solutions: ["Blokir Payment Gateway", "Literasi Digital Nasional"] },
+                        { label: "Pengangguran Gen Z", impact: 85, stats: "9.9 Juta NEET", causes: ["Mismatch kurikulum", "Otomasi AI"], solutions: ["Revitalisasi SMK", "Insentif Startup Lokal"] },
+                        { label: "Ketimpangan Digital", impact: 70, stats: "30% Daerah 3T", causes: ["Infrastruktur minim", "Harga device mahal"], solutions: ["Satelit SATRIA-1", "Subsidi Perangkat Belajar"] }
                     ]
                 },
                 {
-                    label: "Lingkungan", color: "#30D158", icon: "leaf",
+                    label: "Lingkungan Hidup", color: "#30D158", icon: "leaf",
                     children: [
-                        { label: "Polusi Udara", impact: 88, stats: "AQI > 150", causes: ["PLTU Batubara", "Transportasi"], solutions: ["EV Transition", "Pajak Karbon"] },
-                        { label: "Mafia Tanah", impact: 76, stats: "Ribuan Konflik", causes: ["Sertifikat Manual", "Oknum"], solutions: ["Blockchain Land", "Satgas Anti-Mafia"] }
+                        { label: "Polusi Udara", impact: 92, stats: "AQI 160+ (Jakarta)", causes: ["PLTU Batubara", "Transportasi Fosil"], solutions: ["Transisi Bus Listrik", "Pajak Karbon Industri"] },
+                        { label: "Krisis Air Bersih", impact: 88, stats: "40% Akses Rendah", causes: ["Intrusi air laut", "Pencemaran sungai"], solutions: ["Pipanisasi Masif", "Restorasi Daerah Aliran Sungai"] },
+                        { label: "Deforestasi", impact: 95, stats: "600rb Ha/Tahun", causes: ["Alih fungsi lahan", "Ilegal Logging"], solutions: ["Moratorium Sawit", "Reboisasi Berbasis Komunitas"] }
                     ]
                 },
                 {
-                    label: "Hukum & Etika", color: "#FF9F0A", icon: "shield",
+                    label: "Hukum & Tata Kelola", color: "#FF9F0A", icon: "shield",
                     children: [
-                        { label: "Korupsi Politik", impact: 98, stats: "IPK Skor 34", causes: ["Biaya Politik", "Nepotisme"], solutions: ["UU Perampasan Aset", "Meritokrasi"] },
-                        { label: "Kebocoran Data", impact: 85, stats: "PDN Kompromi", causes: ["Server Lemah", "SDM IT"], solutions: ["Audit Siber", "Sovereign Cloud"] }
+                        { label: "Korupsi Politik", impact: 99, stats: "Skor IPK 34", causes: ["Biaya Politik Mahal", "Nepotisme"], solutions: ["UU Perampasan Aset", "Sistem Meritokrasi Total"] },
+                        { label: "Mafia Tanah", impact: 80, stats: "8.000+ Konflik", causes: ["Sertifikat Manual", "Oknum Birokrasi"], solutions: ["Digitalisasi Blockchain", "Satgas Anti-Mafia Independen"] },
+                        { label: "Cyber Security", impact: 84, stats: "PDN Kompromi", causes: ["Server Outdated", "Minim Ahli IT"], solutions: ["Audit Siber Berkala", "Sovereign Cloud Nasional"] }
+                    ]
+                },
+                {
+                    label: "Sosial & Budaya", color: "#BF5AF2", icon: "heart",
+                    children: [
+                        { label: "Mental Health", impact: 82, stats: "1 dari 3 Remaja", causes: ["Hustle Culture", "Cyberbullying"], solutions: ["Psikolog di Puskesmas", "Kurikulum Empati Sekolah"] },
+                        { label: "Komersialisasi Edu", impact: 78, stats: "UKT Naik 40%", causes: ["PTN-BH Mandiri", "Subsidi Berkurang"], solutions: ["Audit Dana Kampus", "Beasiswa Berbasis Pendapatan"] }
                     ]
                 }
             ]
         };
 
         // --- ENGINE ---
-        let scale = 0.8;
-        let posX = window.innerWidth / 2;
-        let posY = window.innerHeight / 2;
-        let isDragging = false;
-        let startX, startY;
-        let initialPinchDist = null;
+        let scale = 0.8, posX = window.innerWidth / 2, posY = window.innerHeight / 2;
+        let isDragging = false, startX, startY;
 
         const viewport = document.getElementById('viewport');
         const container = document.getElementById('canvas-container');
@@ -223,11 +192,10 @@
         function render() {
             nodesLayer.innerHTML = '';
             svgLayer.innerHTML = '';
-            
             createNode(data, 0, 0, true);
 
-            const clusterRadius = 350; // Constant for both mobile & laptop
-            const issueRadius = 220;
+            const clusterRadius = 400;
+            const issueRadius = 250;
 
             data.children.forEach((cluster, i) => {
                 const angle = (i * 2 * Math.PI) / data.children.length;
@@ -238,7 +206,7 @@
                 drawLink(0, 0, cx, cy, cluster.color);
 
                 cluster.children.forEach((issue, j) => {
-                    const subAngle = angle - 0.5 + (j * 0.5);
+                    const subAngle = angle - 0.6 + (j * 0.6);
                     const ix = cx + Math.cos(subAngle) * issueRadius;
                     const iy = cy + Math.sin(subAngle) * issueRadius;
 
@@ -261,34 +229,37 @@
             if(isRoot) card.style.borderColor = 'var(--accent)';
             
             card.innerHTML = `
-                <div class="flex flex-col gap-2">
-                    <div class="flex justify-between items-start">
-                        <i data-lucide="${node.icon || 'circle'}" class="w-4 h-4" style="color:${color || '#fff'}"></i>
-                        ${node.impact ? `<span class="text-[8px] font-black opacity-40">${node.impact}%</span>` : ''}
+                <div class="flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                        <div class="p-2 rounded-xl" style="background:${color ? color+'22' : '#ffffff11'}">
+                            <i data-lucide="${node.icon || 'circle'}" class="w-5 h-5" style="color:${color || '#fff'}"></i>
+                        </div>
+                        ${node.impact ? `<span class="text-[9px] font-black opacity-40 uppercase">${node.impact}% Impact</span>` : ''}
                     </div>
-                    <p class="text-[11px] font-bold leading-tight">${node.label.replace('\n', ' ')}</p>
-                    ${node.impact ? `<div class="impact-bar"><div class="impact-fill" style="width:${node.impact}%; background:${color}"></div></div>` : ''}
+                    <p class="text-xs font-extrabold leading-tight">${node.label.replace('\n', ' ')}</p>
+                    ${node.impact ? `
+                        <div class="impact-meter">
+                            <div class="impact-fill" style="width:${node.impact}%; background:${color}"></div>
+                        </div>` : ''}
                 </div>
             `;
 
             div.appendChild(card);
-            div.onpointerdown = (e) => e.stopPropagation(); // Prevent panning when clicking node
+            div.onpointerdown = (e) => e.stopPropagation();
             div.onclick = () => { if(!isDragging) openDrawer(node, color); };
             nodesLayer.appendChild(div);
         }
 
         function drawLink(x1, y1, x2, y2, color) {
             const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            // Offset coordinates to be relative to the 5000x5000 SVG center
-            const ox = 2500, oy = 2500;
-            const d = `M ${ox + x1} ${oy + y1} Q ${(ox+x1+ox+x2)/2} ${(oy+y1+oy+y2)/2}, ${ox + x2} ${oy + y2}`;
+            const ox = 2500, oy = 2500; // Center of 5000x5000 SVG
+            const d = `M ${ox + x1} ${oy + y1} C ${ox + (x1+x2)/2} ${oy + y1}, ${ox + (x1+x2)/2} ${oy + y2}, ${ox + x2} ${oy + y2}`;
             path.setAttribute("d", d);
             path.setAttribute("class", "flow-line");
             path.setAttribute("stroke", color || "white");
             svgLayer.appendChild(path);
         }
 
-        // --- UNIFIED POINTER EVENTS (MOUSE + TOUCH) ---
         function setupPointerEvents() {
             viewport.onpointerdown = (e) => {
                 if(e.target.closest('.apple-glass')) return;
@@ -310,11 +281,9 @@
                 viewport.releasePointerCapture(e.pointerId);
             };
 
-            // Zoom (Mouse Wheel)
             viewport.onwheel = (e) => {
                 e.preventDefault();
-                const delta = e.deltaY * -0.001;
-                applyZoom(delta, e.clientX, e.clientY);
+                applyZoom(e.deltaY * -0.001, e.clientX, e.clientY);
             };
         }
 
@@ -328,7 +297,6 @@
         }
 
         function updateTransform() {
-            // Offset the container so 0,0 is at the center of the viewport initially
             container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
         }
 
@@ -339,12 +307,29 @@
             document.getElementById('drawer-tag').style.color = color || 'var(--accent)';
             
             document.getElementById('drawer-content').innerHTML = `
-                <div class="space-y-8">
-                    ${node.stats ? `<div class="p-6 bg-white/5 rounded-3xl border border-white/10"><p class="text-[10px] font-black uppercase opacity-40 mb-2">Data Statistik</p><p class="text-2xl font-bold">${node.stats}</p></div>` : ''}
-                    <div><p class="text-[10px] font-black uppercase opacity-40 mb-4">Akar Masalah</p>
-                    <div class="space-y-3">${(node.causes || []).map(c => `<div class="flex gap-3 text-sm text-zinc-400"><i data-lucide="alert-circle" class="w-4 h-4 text-red-500 shrink-0"></i>${c}</div>`).join('')}</div></div>
-                    <div><p class="text-[10px] font-black uppercase opacity-40 mb-4">Solusi Strategis</p>
-                    <div class="space-y-4">${(node.solutions || []).map((s, i) => `<div class="flex gap-4 p-5 apple-glass rounded-2xl border-white/5"><span class="font-black text-blue-500">${i+1}</span><p class="text-sm font-medium">${s}</p></div>`).join('')}</div></div>
+                <div class="space-y-10">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
+                            <p class="text-[10px] font-black uppercase opacity-40 mb-2 tracking-widest">Keparahan</p>
+                            <p class="text-2xl font-bold" style="color:${color}">${node.impact}%</p>
+                        </div>
+                        <div class="p-6 bg-white/5 rounded-3xl border border-white/10">
+                            <p class="text-[10px] font-black uppercase opacity-40 mb-2 tracking-widest">Data Kunci</p>
+                            <p class="text-xl font-bold">${node.stats || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-[10px] font-black uppercase opacity-40 mb-6 tracking-[0.2em]">Akar Penyebab</h4>
+                        <div class="space-y-4">
+                            ${(node.causes || []).map(c => `<div class="flex gap-4 p-5 bg-white/5 rounded-2xl border border-white/5 text-sm text-zinc-300"><i data-lucide="alert-triangle" class="w-5 h-5 text-red-500 shrink-0"></i>${c}</div>`).join('')}
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-[10px] font-black uppercase opacity-40 mb-6 tracking-[0.2em]">Roadmap Solusi</h4>
+                        <div class="space-y-4">
+                            ${(node.solutions || []).map((s, i) => `<div class="flex gap-5 p-6 apple-glass rounded-3xl border-white/5"><span class="text-2xl font-black opacity-20">${i+1}</span><p class="text-sm font-bold">${s}</p></div>`).join('')}
+                        </div>
+                    </div>
                 </div>`;
             
             lucide.createIcons();
@@ -352,9 +337,7 @@
         }
 
         function resetView() {
-            scale = 0.8;
-            posX = window.innerWidth / 2;
-            posY = window.innerHeight / 2;
+            scale = 0.8; posX = window.innerWidth / 2; posY = window.innerHeight / 2;
             updateTransform();
         }
 
