@@ -2,436 +2,340 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Indonesia Strategic Social Map - Ultimate Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Indonesia Strategic Map - Mobile Optimized</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #08080a;
+            --bg: #050506;
             --accent: #0A84FF;
-            --glass: rgba(20, 20, 22, 0.75);
-            --border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(22, 22, 23, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
         }
 
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: var(--bg);
-            color: #ffffff;
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
             overflow: hidden;
-            height: 100vh;
+            background-color: var(--bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: white;
+            touch-action: none; /* Mencegah scroll default browser */
         }
 
-        /* Apple-style Ambient Background */
-        .ambient-glow {
-            position: fixed;
-            width: 100vw; height: 100vh;
-            background: 
-                radial-gradient(circle at 10% 10%, rgba(10, 132, 255, 0.07) 0%, transparent 50%),
-                radial-gradient(circle at 90% 90%, rgba(48, 209, 88, 0.07) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(191, 90, 242, 0.05) 0%, transparent 50%);
-            z-index: -1;
-        }
-
-        .grid-overlay {
-            position: fixed;
-            inset: 0;
-            background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 50px 50px;
+        .ambient-bg {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(10, 132, 255, 0.08) 0%, transparent 70%);
             z-index: -1;
         }
 
         .apple-glass {
             background: var(--glass);
-            backdrop-filter: blur(40px) saturate(150%);
-            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
             border: 1px solid var(--border);
         }
 
         #canvas-container {
+            position: absolute;
+            width: 100%; height: 100%;
             cursor: grab;
-            transition: transform 0.1s ease-out;
+            transform-origin: 0 0;
+            will-change: transform;
         }
 
         .node {
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            transform-style: preserve-3d;
+            position: absolute;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
         }
 
-        .node:hover {
-            transform: scale(1.05) translateY(-5px);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-            z-index: 100;
+        .node-content {
+            padding: 12px 16px;
+            border-radius: 18px;
+            text-align: center;
+            min-width: 120px;
+            font-size: 11px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .line-connector {
             fill: none;
-            stroke-width: 1.2;
+            stroke-width: 1.5;
             opacity: 0.15;
-            transition: opacity 0.3s, stroke-width 0.3s;
         }
 
+        /* Drawer Responsive */
         #detail-drawer {
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            position: fixed;
+            top: 0; right: 0; bottom: 0;
+            width: 100%; /* Default Mobile */
+            max-width: 500px; /* Desktop */
             transform: translateX(100%);
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
         }
 
-        #detail-drawer.open {
-            transform: translateX(0);
-        }
+        #detail-drawer.open { transform: translateX(0); }
 
         .custom-scroll::-webkit-scrollbar { width: 3px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); }
 
-        .search-hit {
-            box-shadow: 0 0 0 3px var(--accent) !important;
-            border-color: var(--accent) !important;
+        /* Search Bar Mobile */
+        .search-container {
+            position: fixed;
+            top: 20px; left: 50%;
+            transform: translateX(-50%);
+            width: 90%; max-width: 500px;
+            z-index: 500;
         }
 
-        .focus-mode .ui-element { opacity: 0; pointer-events: none; }
+        .focus-mode .ui-el { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div class="ambient-glow"></div>
-    <div class="grid-overlay"></div>
+    <div class="ambient-bg"></div>
 
-    <!-- Top UI -->
-    <header class="ui-element fixed top-8 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-2xl transition-all duration-500">
-        <div class="apple-glass rounded-[2rem] p-2 flex items-center gap-4 shadow-2xl">
-            <div class="pl-4 text-zinc-500"><i data-lucide="search" class="w-4 h-4"></i></div>
-            <input type="text" id="search-input" placeholder="Cari masalah, solusi, atau data..." 
-                   class="bg-transparent border-none outline-none w-full py-2 text-sm font-medium text-zinc-200">
-            <button id="focus-toggle" class="p-3 hover:bg-white/10 rounded-2xl transition-all mr-1">
-                <i data-lucide="layout-dashboard" class="w-4 h-4 text-zinc-400"></i>
+    <!-- Search Bar -->
+    <div class="search-container ui-el">
+        <div class="apple-glass rounded-2xl p-2 flex items-center gap-3 shadow-2xl">
+            <div class="pl-3 text-zinc-500"><i data-lucide="search" class="w-4 h-4"></i></div>
+            <input type="text" id="search-input" placeholder="Cari isu (misal: Judol, Polusi)..." 
+                   class="bg-transparent border-none outline-none w-full py-1 text-sm text-white">
+            <button id="focus-btn" class="p-2 hover:bg-white/10 rounded-xl">
+                <i data-lucide="maximize" class="w-4 h-4 text-zinc-400"></i>
             </button>
-        </div>
-    </header>
-
-    <!-- Canvas -->
-    <main class="relative w-full h-full overflow-hidden">
-        <div id="canvas-container" class="absolute inset-0 flex items-center justify-center">
-            <svg id="svg-layer" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
-            <div id="nodes-layer" class="relative"></div>
-        </div>
-    </main>
-
-    <!-- Controls -->
-    <div class="ui-element fixed bottom-10 left-10 z-50 flex flex-col gap-3">
-        <div class="apple-glass p-2 rounded-2xl flex flex-col gap-1 shadow-2xl">
-            <button onclick="zoomMap(0.2)" class="p-3 hover:bg-white/10 rounded-xl transition-all"><i data-lucide="plus" class="w-5 h-5"></i></button>
-            <button onclick="zoomMap(-0.2)" class="p-3 hover:bg-white/10 rounded-xl transition-all"><i data-lucide="minus" class="w-5 h-5"></i></button>
-            <div class="h-px bg-white/5 mx-2"></div>
-            <button onclick="resetMap()" class="p-3 hover:bg-white/10 rounded-xl transition-all"><i data-lucide="refresh-ccw" class="w-5 h-5"></i></button>
         </div>
     </div>
 
-    <!-- Side Panel -->
-    <aside id="detail-drawer" class="fixed top-0 right-0 h-full w-full max-w-xl apple-glass z-[100] shadow-2xl flex flex-col">
-        <div class="p-8 border-b border-white/5 flex justify-between items-center">
-            <div>
-                <p id="drawer-tag" class="text-[10px] font-black tracking-[0.3em] text-accent uppercase mb-1">ANALISIS STRATEGIS</p>
-                <h2 id="drawer-title" class="text-2xl font-bold">Judul Masalah</h2>
-            </div>
-            <button id="close-drawer" class="p-4 hover:bg-white/10 rounded-full transition-all">
-                <i data-lucide="x" class="w-6 h-6"></i>
-            </button>
+    <!-- Main Canvas -->
+    <main id="viewport" class="relative w-full h-full overflow-hidden">
+        <div id="canvas-container">
+            <svg id="svg-layer" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
+            <div id="nodes-layer"></div>
         </div>
-        <div id="drawer-content" class="flex-1 overflow-y-auto p-10 custom-scroll space-y-10">
-            <!-- Content Injected by JS -->
+    </main>
+
+    <!-- Mobile Controls -->
+    <div class="ui-el fixed bottom-6 right-6 flex flex-col gap-3 z-50">
+        <button onclick="resetMap()" class="apple-glass p-4 rounded-full shadow-xl active:scale-90 transition-all">
+            <i data-lucide="refresh-cw" class="w-6 h-6"></i>
+        </button>
+    </div>
+
+    <!-- Side Panel -->
+    <aside id="detail-drawer" class="apple-glass flex flex-col">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+            <h2 id="drawer-title" class="text-xl font-bold">Detail Isu</h2>
+            <button id="close-drawer" class="p-3 bg-white/5 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+        <div id="drawer-content" class="flex-1 overflow-y-auto p-8 custom-scroll space-y-8">
+            <!-- Content -->
         </div>
     </aside>
 
     <script>
-        // --- DATA ENCYCLOPEDIA ---
+        // --- DATA ---
         const mindData = {
-            id: "root",
-            label: "ISU SOSIAL\nINDONESIA",
-            type: "root",
+            id: "root", label: "INDONESIA\n2024",
             children: [
                 {
-                    id: "ekonomi",
-                    label: "Ekonomi & \nDigital",
-                    color: "#0A84FF",
+                    label: "Ekonomi Digital", color: "#0A84FF",
                     children: [
-                        {
-                            id: "judol",
-                            label: "Judi Online & \nPinjol",
-                            category: "Darurat Finansial",
-                            description: "Ekosistem perjudian digital yang menjerat jutaan warga kelas bawah dan menengah.",
-                            stats: "Kerugian ekonomi mencapai Rp 327 Triliun; 2,7 juta warga terlibat.",
-                            causes: ["Akses pinjaman instan tanpa agunan", "Predatory marketing di media sosial", "Rendahnya literasi keuangan"],
-                            impact: ["Hancurnya ketahanan keluarga", "Kenaikan angka bunuh diri & kriminalitas", "Data pribadi disalahgunakan"],
-                            solutions: ["Blokir Payment Gateway & IP Judol", "Penguatan UU ITE & OJK", "Edukasi literasi digital masif"]
-                        },
-                        {
-                            id: "genz-job",
-                            label: "Pengangguran \nGen Z",
-                            category: "Ketenagakerjaan",
-                            description: "Fenomena 9,9 juta anak muda (15-24 tahun) yang tidak sekolah dan tidak bekerja (NEET).",
-                            stats: "Tingkat pengangguran terbuka pemuda mencapai 13-15%.",
-                            causes: ["Mismatch kurikulum pendidikan vs industri", "Otomasi & AI menggantikan entry-level job", "Ekspektasi gaji vs realita ekonomi"],
-                            solutions: ["Revitalisasi SMK & Link-and-Match", "Insentif pajak untuk perusahaan yang rekrut fresh grad", "Pengembangan Gig Economy yang terlindungi"]
-                        },
-                        {
-                            id: "ukt",
-                            label: "Komersialisasi \nPendidikan",
-                            category: "Akses Keadilan",
-                            description: "Kenaikan biaya kuliah (UKT) di PTN-BH yang membuat pendidikan tinggi menjadi barang mewah.",
-                            solutions: ["Audit transparansi dana PTN-BH", "Skema Student Loan tanpa bunga dari negara", "Peningkatan kuota KIP Kuliah"]
-                        }
+                        { label: "Judi Online", stats: "Rp 327 Triliun perputaran uang", causes: ["Akses pinjol mudah", "Literasi rendah"], solutions: ["Blokir IP", "Satgas Terpadu"] },
+                        { label: "Pengangguran Gen Z", stats: "9,9 Juta NEET", causes: ["Mismatch skill", "Otomasi AI"], solutions: ["Link & Match SMK", "Insentif Pajak"] }
                     ]
                 },
                 {
-                    id: "lingkungan",
-                    label: "Lingkungan & \nAgraria",
-                    color: "#30D158",
+                    label: "Lingkungan", color: "#30D158",
                     children: [
-                        {
-                            id: "polusi",
-                            label: "Polusi Udara \nJakarta",
-                            category: "Kesehatan Publik",
-                            description: "Kualitas udara buruk yang konsisten di Jabodetabek akibat emisi kendaraan dan PLTU.",
-                            stats: "IQ penduduk terancam turun; Kasus ISPA naik 200%.",
-                            causes: ["Ketergantungan pada energi batubara", "Pertumbuhan kendaraan pribadi tak terkendali", "Minimnya ruang terbuka hijau"],
-                            solutions: ["Transisi ke Bus Listrik (EV)", "Pensiun dini PLTU sekitar Jakarta", "Penerapan pajak emisi tinggi"]
-                        },
-                        {
-                            id: "mafia-tanah",
-                            label: "Mafia Tanah",
-                            category: "Konflik Agraria",
-                            description: "Praktik perampasan lahan milik warga oleh oknum yang bekerja sama dengan birokrasi.",
-                            causes: ["Sertifikasi tanah belum digital sepenuhnya", "Tumpang tindih aturan lahan", "Lemahnya penegakan hukum bagi oknum internal"],
-                            solutions: ["Digitalisasi Sertifikat (Blockchain)", "Satgas Anti-Mafia Tanah yang independen", "Penyederhanaan sistem pendaftaran tanah"]
-                        },
-                        {
-                            id: "food-estate",
-                            label: "Kegagalan \nFood Estate",
-                            category: "Ketahanan Pangan",
-                            description: "Proyek lumbung pangan yang justru merusak hutan gambut tanpa hasil panen maksimal.",
-                            solutions: ["Kembali ke pertanian berbasis kearifan lokal", "Rehabilitasi lahan gambut yang rusak", "Stop konversi hutan untuk monokultur"]
-                        }
+                        { label: "Polusi Jakarta", stats: "IQ terancam turun", causes: ["PLTU Batubara", "Kendaraan pribadi"], solutions: ["Bus Listrik", "Pajak Emisi"] },
+                        { label: "Mafia Tanah", stats: "Konflik agraria masif", causes: ["Sertifikat manual", "Oknum birokrasi"], solutions: ["Sertifikat Digital", "Satgas Mafia"] }
                     ]
                 },
                 {
-                    id: "hukum",
-                    label: "Hukum & \nIntegritas",
-                    color: "#FF9F0A",
+                    label: "Hukum & Etika", color: "#FF9F0A",
                     children: [
-                        {
-                            id: "korupsi",
-                            label: "Korupsi & \nDinasti Politik",
-                            category: "Tata Kelola",
-                            description: "Normalisasi praktik nepotisme dan pelemahan lembaga antirasuah (KPK).",
-                            stats: "Indeks Persepsi Korupsi (IPK) Indonesia turun ke angka 34.",
-                            causes: ["Sistem politik berbiaya tinggi", "Lemahnya etika politik elit", "Hukuman koruptor yang tidak memberi efek jera"],
-                            solutions: ["Pengesahan UU Perampasan Aset", "Kembalikan independensi KPK", "Pembatasan dinasti dalam UU Pilkada"]
-                        },
-                        {
-                            id: "cyber-security",
-                            label: "Kebocoran Data \nNasional",
-                            category: "Keamanan Siber",
-                            description: "Berulangnya kasus peretasan data sensitif negara (PDN, BPJS, KPU).",
-                            solutions: ["Audit total infrastruktur siber negara", "Peningkatan gaji & fasilitas ahli IT lokal", "Kedaulatan Cloud Nasional"]
-                        }
-                    ]
-                },
-                {
-                    id: "sosial",
-                    label: "Sosial & \nKesehatan",
-                    color: "#BF5AF2",
-                    children: [
-                        {
-                            id: "stunting",
-                            label: "Stunting",
-                            category: "Kualitas SDM",
-                            description: "Gagal tumbuh pada anak akibat kekurangan gizi kronis yang mengancam masa depan bangsa.",
-                            stats: "Prevalensi stunting masih di angka 21,5% (Target 14% di 2024).",
-                            solutions: ["Distribusi protein hewani gratis", "Sanitasi air bersih di desa pelosok", "Edukasi gizi bagi ibu hamil"]
-                        },
-                        {
-                            id: "mental-health",
-                            label: "Krisis Kesehatan \nMental",
-                            category: "Kesejahteraan",
-                            description: "Meningkatnya angka depresi dan bunuh diri di kalangan remaja akibat tekanan sosial.",
-                            solutions: ["Psikolog gratis di tiap Puskesmas", "Kurikulum kesehatan mental di sekolah", "Regulasi jam kerja 'Work-Life Balance'"]
-                        }
+                        { label: "Dinasti Politik", stats: "IPK turun ke 34", causes: ["Biaya politik mahal", "Etika lemah"], solutions: ["UU Perampasan Aset", "Batasi Nepotisme"] },
+                        { label: "Kebocoran Data", stats: "Data PDN diretas", causes: ["Server lemah", "SDM IT minim"], solutions: ["Audit Siber", "Sovereign Cloud"] }
                     ]
                 }
             ]
         };
 
-        // --- ENGINE ---
-        let zoom = 0.75;
-        let offset = { x: 0, y: 0 };
+        // --- ENGINE STATE ---
+        let scale = 0.8;
+        let posX = window.innerWidth / 2;
+        let posY = window.innerHeight / 2;
         let isDragging = false;
-        let startPan = { x: 0, y: 0 };
+        let lastTouchX, lastTouchY;
+        let initialPinchDist = null;
 
+        const container = document.getElementById('canvas-container');
         const nodesLayer = document.getElementById('nodes-layer');
         const svgLayer = document.getElementById('svg-layer');
-        const canvas = document.getElementById('canvas-container');
 
         function init() {
             lucide.createIcons();
             render();
-            setupEvents();
-            window.addEventListener('resize', render);
+            setupTouchEvents();
+            updateTransform();
         }
 
         function render() {
             nodesLayer.innerHTML = '';
             svgLayer.innerHTML = '';
             
-            createNode(mindData, 0, 0);
+            // Root
+            createNode(mindData, 0, 0, true);
 
-            const clusterRadius = 450;
-            const issueRadius = 280;
-            const angleStep = (Math.PI * 2) / mindData.children.length;
+            const clusterRadius = window.innerWidth < 600 ? 180 : 300;
+            const issueRadius = window.innerWidth < 600 ? 120 : 200;
 
             mindData.children.forEach((cluster, i) => {
-                const angle = i * angleStep;
+                const angle = (i * 2 * Math.PI) / mindData.children.length;
                 const cx = Math.cos(angle) * clusterRadius;
                 const cy = Math.sin(angle) * clusterRadius;
 
-                createNode(cluster, cx, cy);
+                createNode(cluster, cx, cy, false, cluster.color);
                 drawLink(0, 0, cx, cy, cluster.color);
 
                 cluster.children.forEach((issue, j) => {
-                    const subAngle = angle - 0.6 + (j * 0.6);
+                    const subAngle = angle - 0.4 + (j * 0.4);
                     const ix = cx + Math.cos(subAngle) * issueRadius;
                     const iy = cy + Math.sin(subAngle) * issueRadius;
 
-                    createNode(issue, ix, iy);
+                    createNode(issue, ix, iy, false);
                     drawLink(cx, cy, ix, iy, cluster.color);
                 });
             });
         }
 
-        function createNode(node, x, y) {
+        function createNode(node, x, y, isRoot, color) {
             const div = document.createElement('div');
-            div.className = `node absolute apple-glass p-6 rounded-[2.5rem] cursor-pointer text-center min-w-[200px]`;
-            
-            if(node.type === 'root') {
-                div.classList.add('border-accent/50', 'bg-accent/10', 'scale-125', 'z-50');
-                div.innerHTML = `<div class="text-[10px] font-black text-accent tracking-widest mb-1">STRATEGIC HUB</div><div class="font-extrabold text-sm">${node.label}</div>`;
-            } else if(node.color) {
-                div.style.borderColor = `${node.color}55`;
-                div.innerHTML = `<div class="text-[9px] font-bold opacity-50 mb-1 uppercase" style="color:${node.color}">Rumpun</div><div class="font-bold text-sm">${node.label}</div>`;
-            } else {
-                div.innerHTML = `<div class="text-[8px] font-bold text-zinc-500 mb-1 uppercase">Isu Nasional</div><div class="font-semibold text-xs leading-snug">${node.label}</div>`;
-            }
+            div.className = 'node';
+            div.style.left = `${x}px`;
+            div.style.top = `${y}px`;
 
-            div.style.left = `calc(50% + ${x}px)`;
-            div.style.top = `calc(50% + ${y}px)`;
-            div.style.transform = `translate(-50%, -50%)`;
-            
-            div.onclick = (e) => {
-                e.stopPropagation();
-                if(node.type !== 'root') openDrawer(node);
-            };
+            const content = document.createElement('div');
+            content.className = 'node-content apple-glass';
+            if(isRoot) content.style.border = '2px solid var(--accent)';
+            if(color) content.style.color = color;
+            content.innerText = node.label;
+
+            div.appendChild(content);
+            div.onclick = () => { if(!isDragging) openDrawer(node); };
             nodesLayer.appendChild(div);
         }
 
         function drawLink(x1, y1, x2, y2, color) {
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            const startX = window.innerWidth / 2 + x1;
-            const startY = window.innerHeight / 2 + y1;
-            const endX = window.innerWidth / 2 + x2;
-            const endY = window.innerHeight / 2 + y2;
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+            line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+            line.setAttribute("class", "line-connector");
+            line.setAttribute("stroke", color || "white");
+            svgLayer.appendChild(line);
+        }
 
-            const cp1x = startX + (endX - startX) * 0.5;
-            const d = `M ${startX} ${startY} C ${cp1x} ${startY}, ${cp1x} ${endY}, ${endX} ${endY}`;
-            
-            path.setAttribute("d", d);
-            path.setAttribute("class", "line-connector");
-            path.setAttribute("stroke", color || "rgba(255,255,255,0.1)");
-            svgLayer.appendChild(path);
+        // --- TOUCH & GESTURE ENGINE ---
+        function setupTouchEvents() {
+            // Mouse Wheel (Desktop)
+            window.addEventListener('wheel', e => {
+                if(e.target.closest('#detail-drawer')) return;
+                e.preventDefault();
+                const delta = e.deltaY * -0.001;
+                applyZoom(delta, e.clientX, e.clientY);
+            }, { passive: false });
+
+            // Touch Start
+            window.addEventListener('touchstart', e => {
+                if(e.target.closest('#detail-drawer') || e.target.closest('.ui-el')) return;
+                isDragging = true;
+                if(e.touches.length === 1) {
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
+                } else if(e.touches.length === 2) {
+                    initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                }
+            }, { passive: false });
+
+            // Touch Move
+            window.addEventListener('touchmove', e => {
+                if(e.target.closest('#detail-drawer')) return;
+                e.preventDefault();
+
+                if(e.touches.length === 1 && isDragging) {
+                    const dx = e.touches[0].clientX - lastTouchX;
+                    const dy = e.touches[0].clientY - lastTouchY;
+                    posX += dx; posY += dy;
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
+                } else if(e.touches.length === 2) {
+                    const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    const delta = (dist - initialPinchDist) * 0.005;
+                    const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    applyZoom(delta, midX, midY);
+                    initialPinchDist = dist;
+                }
+                updateTransform();
+            }, { passive: false });
+
+            window.addEventListener('touchend', () => { isDragging = false; initialPinchDist = null; });
+        }
+
+        function applyZoom(delta, centerX, centerY) {
+            const oldScale = scale;
+            scale = Math.min(Math.max(0.3, scale + delta), 3);
+            const ratio = scale / oldScale;
+            posX = centerX - (centerX - posX) * ratio;
+            posY = centerY - (centerY - posY) * ratio;
+            updateTransform();
+        }
+
+        function updateTransform() {
+            container.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
         }
 
         function openDrawer(node) {
+            if(!node.causes && !node.solutions) return;
             const drawer = document.getElementById('detail-drawer');
-            document.getElementById('drawer-title').innerText = node.label.replace('\n', ' ');
-            document.getElementById('drawer-tag').innerText = node.category || "Analisis Sektoral";
+            document.getElementById('drawer-title').innerText = node.label;
             
-            let html = `<p class="text-xl text-zinc-300 leading-relaxed">${node.description || "Data sedang diperbarui oleh sistem."}</p>`;
-
-            if(node.stats) {
-                html += `
-                    <div class="bg-accent/10 border border-accent/20 p-8 rounded-[2rem]">
-                        <h5 class="text-[10px] font-black text-accent uppercase tracking-widest mb-2">Statistik Kunci</h5>
-                        <p class="text-2xl font-bold text-white">${node.stats}</p>
-                    </div>`;
-            }
-
-            if(node.causes) {
-                html += `
-                    <div>
-                        <h5 class="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-6">Akar Masalah</h5>
-                        <div class="grid gap-4">
-                            ${node.causes.map(c => `<div class="flex gap-4 p-5 bg-white/5 rounded-2xl border border-white/5 text-sm text-zinc-300"><i data-lucide="alert-circle" class="w-5 h-5 text-red-400 shrink-0"></i>${c}</div>`).join('')}
-                        </div>
-                    </div>`;
-            }
-
-            if(node.solutions) {
-                html += `
-                    <div>
-                        <h5 class="text-[10px] font-black text-green-500 uppercase tracking-widest mb-6">Roadmap Solusi</h5>
-                        <div class="space-y-4">
-                            ${node.solutions.map((s, i) => `
-                                <div class="flex gap-6 items-center p-6 bg-green-500/5 border border-green-500/10 rounded-[1.5rem]">
-                                    <span class="text-2xl font-black text-green-500/20">${i+1}</span>
-                                    <p class="text-sm font-bold text-zinc-200">${s}</p>
-                                </div>`).join('')}
-                        </div>
-                    </div>`;
-            }
-
+            let html = `
+                <div class="space-y-6">
+                    ${node.stats ? `<div class="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20"><p class="text-xs text-blue-400 font-bold uppercase mb-1">Statistik</p><p class="text-lg font-bold">${node.stats}</p></div>` : ''}
+                    <div><p class="text-xs text-zinc-500 font-bold uppercase mb-3">Akar Masalah</p>
+                    <ul class="space-y-2">${(node.causes || []).map(c => `<li class="flex gap-2 text-sm text-zinc-300"><i data-lucide="alert-circle" class="w-4 h-4 text-red-500 shrink-0"></i>${c}</li>`).join('')}</ul></div>
+                    <div><p class="text-xs text-green-500 font-bold uppercase mb-3">Solusi Strategis</p>
+                    <ul class="space-y-2">${(node.solutions || []).map(s => `<li class="flex gap-2 text-sm text-zinc-100 font-medium"><i data-lucide="check-circle" class="w-4 h-4 text-green-500 shrink-0"></i>${s}</li>`).join('')}</ul></div>
+                </div>`;
+            
             document.getElementById('drawer-content').innerHTML = html;
             lucide.createIcons();
             drawer.classList.add('open');
         }
 
-        function setupEvents() {
-            window.addEventListener('wheel', (e) => {
-                if (e.target.closest('#detail-drawer')) return;
-                e.preventDefault();
-                zoom = Math.min(Math.max(0.2, zoom + e.deltaY * -0.001), 2);
-                updateTransform();
-            }, { passive: false });
-
-            window.addEventListener('mousedown', (e) => {
-                if(e.target.closest('.apple-glass') || e.target.closest('.node')) return;
-                isDragging = true;
-                startPan = { x: e.clientX - offset.x, y: e.clientY - offset.y };
-            });
-
-            window.addEventListener('mousemove', (e) => {
-                if(!isDragging) return;
-                offset.x = e.clientX - startPan.x;
-                offset.y = e.clientY - startPan.y;
-                updateTransform();
-            });
-
-            window.addEventListener('mouseup', () => isDragging = false);
-
-            document.getElementById('search-input').addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                document.querySelectorAll('.node').forEach(n => {
-                    n.classList.toggle('search-hit', term && n.innerText.toLowerCase().includes(term));
-                });
-            });
-
-            document.getElementById('close-drawer').onclick = () => document.getElementById('detail-drawer').classList.remove('open');
-            document.getElementById('focus-toggle').onclick = () => document.body.classList.toggle('focus-mode');
+        function resetMap() {
+            scale = 0.8;
+            posX = window.innerWidth / 2;
+            posY = window.innerHeight / 2;
+            updateTransform();
         }
 
-        function updateTransform() { canvas.style.transform = `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`; }
-        function zoomMap(v) { zoom = Math.min(Math.max(0.2, zoom + v), 2); updateTransform(); }
-        function resetMap() { zoom = 0.75; offset = { x: 0, y: 0 }; updateTransform(); }
+        document.getElementById('close-drawer').onclick = () => document.getElementById('detail-drawer').classList.remove('open');
+        document.getElementById('focus-btn').onclick = () => document.body.classList.toggle('focus-mode');
+
+        window.addEventListener('resize', () => {
+            resetMap();
+            render();
+        });
 
         init();
     </script>
