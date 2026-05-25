@@ -3,376 +3,367 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Indonesia Social Dashboard - High Performance</title>
+    <title>Indonesia Social Hub - Optimized</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0b0c10;
-            --card-bg: #1f2833;
-            --accent: #45f3ff;
-            --border: rgba(255, 255, 255, 0.08);
+            --bg: #050507;
+            --glass: rgba(15, 15, 20, 0.85);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #0A84FF;
         }
 
         body, html {
             margin: 0; padding: 0; width: 100%; height: 100%;
             overflow: hidden; background-color: var(--bg);
-            font-family: 'Plus Jakarta Sans', sans-serif; color: #c5c6c7;
+            font-family: 'Plus Jakarta Sans', sans-serif; color: #f5f5f7;
             touch-action: none; -webkit-font-smoothing: antialiased;
         }
 
-        /* Ambient static background - Ringan tanpa blur real-time */
-        .ambient-bg {
+        /* Ambient Background - Optimized for Mobile (No Heavy Blurs) */
+        .ambient-glow {
             position: fixed; inset: 0; z-index: -1;
-            background: radial-gradient(circle at 50% 50%, #1f2833 0%, #0b0c10 100%);
+            background: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050507 100%);
         }
 
-        /* Pengganti glassmorphism kaku biar performa HP lancar jaya */
-        .premium-box {
-            background: #151a22;
+        /* GPU Accelerated Container */
+        #viewport { width: 100vw; height: 100vh; cursor: grab; overflow: hidden; position: relative; }
+        #canvas-container { 
+            position: absolute; 
+            will-change: transform; 
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+        }
+
+        .apple-glass {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
             border: 1px solid var(--border);
         }
 
-        /* Canvas Navigation Layer dengan optimalisasi GPU */
-        #viewport { width: 100vw; height: 100vh; cursor: grab; overflow: hidden; position: relative; }
-        #viewport:active { cursor: grabbing; }
-        #canvas-container { 
-            position: absolute; 
-            transform-origin: 0 0; 
-            will-change: transform;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-        }
-
-        /* Node Cards - Ringan & Responsif */
-        .node { position: absolute; pointer-events: auto; z-index: 10; }
+        /* Responsive Nodes */
         .node-card {
-            width: 210px; padding: 14px; border-radius: 20px;
-            background: #1b222c; border: 1px solid rgba(255,255,255,0.06);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            width: 180px; padding: 12px; border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease-out;
+            pointer-events: auto;
         }
-        @media (max-width: 768px) {
-            .node-card { width: 160px; padding: 10px; border-radius: 14px; }
-        }
-        .node-card:hover {
-            transform: scale(1.05);
-            border-color: var(--n-color, var(--accent));
-        }
-        .node-active {
-            border-color: var(--n-color, var(--accent)) !important;
-            background: #222a36 !important;
-        }
+        @media (min-width: 768px) { .node-card { width: 240px; padding: 18px; } }
 
-        /* SVG Line Sederhana tapi Elegan (Anti-Lag) */
-        .flow-line { fill: none; stroke-width: 2; opacity: 0.4; }
-
-        /* Responsive Drawer System (Kanan di PC, Bottom Sheet di HP) */
-        #detail-drawer {
-            position: fixed; z-index: 1000;
-            background: #12161f; border: 1px solid var(--border);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex; flex-col: column;
-        }
+        /* Smooth Lines */
+        .flow-line { fill: none; stroke-width: 1.5; opacity: 0.2; }
         
-        /* Layout untuk PC desktop */
-        @media (min-width: 769px) {
-            #detail-drawer { top: 16px; right: 16px; bottom: 16px; width: 460px; border-radius: 24px; transform: translateX(125%); }
+        /* Drawer/Bottom Sheet System */
+        #detail-drawer {
+            position: fixed; left: 0; right: 0; bottom: 0;
+            height: 85vh; transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+            z-index: 1000; border-radius: 32px 32px 0 0;
+            max-width: 700px; margin: 0 auto;
         }
-        /* Layout khusus HP agar pas di genggaman */
-        @media (max-width: 768px) {
-            #detail-drawer { left: 0; right: 0; bottom: 0; height: 70vh; border-radius: 24px 24px 0 0; transform: translateY(105%); }
+        @media (min-width: 1024px) {
+            #detail-drawer {
+                top: 20px; right: 20px; bottom: 20px; left: auto;
+                width: 450px; height: auto; border-radius: 32px;
+                transform: translateX(120%);
+            }
         }
-        #detail-drawer.open { transform: translateX(0) translateY(0); }
+        #detail-drawer.open { transform: translateY(0); }
+        @media (min-width: 1024px) { #detail-drawer.open { transform: translateX(0); } }
 
-        .bar-bg { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
-        .bar-fill { height: 100%; border-radius: 4px; width: 0; transition: width 0.8s ease-out; }
+        /* Performance Fixes */
+        .searching .node:not(.search-match) { opacity: 0.15; filter: grayscale(1); }
+        .search-match { z-index: 100 !important; scale: 1.1; }
+        
         .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <div class="ambient-bg"></div>
+    <div class="ambient-glow"></div>
 
+    <!-- Header -->
     <header class="fixed top-4 left-4 right-4 z-50 flex items-center justify-between pointer-events-none">
-        <div class="flex items-center gap-3 pointer-events-auto premium-box p-2.5 rounded-xl shadow-lg">
-            <div class="bg-cyan-500/10 p-2 rounded-lg"><i data-lucide="globe" class="text-cyan-400 w-5 h-5"></i></div>
+        <div class="flex items-center gap-3 pointer-events-auto bg-black/20 p-2 rounded-2xl backdrop-blur-md">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i data-lucide="layout-grid" class="text-white w-5 h-5"></i>
+            </div>
             <div>
-                <h1 class="text-xs md:text-sm font-extrabold tracking-tight text-white">INDONESIA SOCIAL HUB</h1>
-                <p class="text-[8px] font-bold text-zinc-500 tracking-wider">Materi Isu Masalah Sosial Makro</p>
+                <h1 class="text-xs md:text-sm font-extrabold tracking-tight">INDONESIA HUB</h1>
+                <p class="text-[8px] text-zinc-400 font-bold uppercase tracking-widest">v2.0 Optimized</p>
             </div>
         </div>
-        <div class="pointer-events-auto premium-box px-3 py-1.5 rounded-full flex items-center gap-2 w-40 md:w-56 shadow-lg">
-            <i data-lucide="search" class="w-3.5 h-3.5 text-zinc-400"></i>
-            <input type="text" id="search-box" placeholder="Cari masalah..." class="bg-transparent text-[11px] text-white focus:outline-none w-full placeholder-zinc-500">
+        <div class="pointer-events-auto">
+            <input type="text" id="search-input" placeholder="Cari isu..." 
+                class="apple-glass px-4 py-2 rounded-full text-xs w-40 md:w-64 focus:outline-none focus:ring-2 ring-blue-500/50 transition-all">
         </div>
     </header>
 
     <div id="viewport">
         <div id="canvas-container">
-            <svg id="svg-layer" style="position:absolute; top:-3000px; left:-3000px; width:6000px; height:6000px; pointer-events:none;"></svg>
+            <svg id="svg-layer" style="position:absolute; top:-2000px; left:-2000px; width:4000px; height:4000px; pointer-events:none;"></svg>
             <div id="nodes-layer"></div>
         </div>
     </div>
 
-    <div class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 premium-box px-3 py-1.5 rounded-full flex items-center gap-2 shadow-xl">
-        <button onclick="zoom(0.2)" class="p-1.5 hover:bg-white/5 active:scale-90 rounded-full text-white"><i data-lucide="plus" class="w-4 h-4"></i></button>
-        <button onclick="zoom(-0.2)" class="p-1.5 hover:bg-white/5 active:scale-90 rounded-full text-white"><i data-lucide="minus" class="w-4 h-4"></i></button>
-        <div class="w-px h-4 bg-white/10"></div>
-        <button onclick="reset()" class="p-1.5 hover:bg-white/5 active:scale-90 rounded-full text-white"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+    <!-- Mobile Navigation Controls -->
+    <div class="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-50 pointer-events-auto">
+        <div class="apple-glass p-1.5 rounded-full flex gap-1 shadow-2xl">
+            <button onclick="applyZoom(0.3)" class="p-3 hover:bg-white/10 rounded-full"><i data-lucide="plus" class="w-5 h-5"></i></button>
+            <button onclick="applyZoom(-0.3)" class="p-3 hover:bg-white/10 rounded-full"><i data-lucide="minus" class="w-5 h-5"></i></button>
+            <button onclick="resetView()" class="p-3 bg-blue-600 rounded-full text-white"><i data-lucide="refresh-cw" class="w-5 h-5"></i></button>
+        </div>
     </div>
 
-    <aside id="detail-drawer">
-        <div class="md:hidden w-12 h-1 bg-zinc-700 rounded-full mx-auto mt-3 shrink-0"></div>
-        <div class="p-5 border-b border-white/5 flex justify-between items-center">
+    <!-- Detail Drawer -->
+    <aside id="detail-drawer" class="apple-glass flex flex-col shadow-2xl">
+        <div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-3 mb-1 lg:hidden"></div>
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
             <div class="flex items-center gap-3">
-                <div id="d-icon" class="p-2.5 rounded-xl"></div>
-                <div>
-                    <span class="text-[9px] font-bold text-zinc-400 tracking-wider uppercase">Analisis Isu Nasional</span>
-                    <h2 id="d-title" class="text-base md:text-lg font-bold text-white tracking-tight">Judul Masalah</h2>
-                </div>
+                <div id="drawer-icon-box" class="p-3 rounded-2xl"></div>
+                <h2 id="drawer-title" class="text-lg font-bold">Isu Strategis</h2>
             </div>
-            <button id="close-d" class="p-2 hover:bg-white/5 text-zinc-400 hover:text-white rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <button id="close-drawer" class="p-2 hover:bg-white/10 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button>
         </div>
-        <div id="d-content" class="flex-1 overflow-y-auto p-5 space-y-6 custom-scroll">
-            </div>
+        <div id="drawer-content" class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll text-sm">
+            <!-- Content Injected via JS -->
+        </div>
     </aside>
 
     <script>
-        // --- DATABASE KOMPREHENSIF BERDASARKAN MATERI KAMU ---
-        const masterData = {
-            id: "pusat", label: "MASALAH SOSIAL\nINDONESIA", icon: "alert-octagon", color: "#ffffff",
+        // --- DATA EXPANSION (MORE ISSUES) ---
+        const data = {
+            id: "root", label: "INDONESIA\nSOCIAL MAP", icon: "database", color: "#ffffff",
             children: [
                 {
-                    id: "isu_miskin", label: "Kemiskinan & Kesenjangan", icon: "trending-down", color: "#ff453a",
-                    desc: "Distribusi kekayaan yang tidak merata membuat sebagian masyarakat kesulitan memenuhi kebutuhan dasar, seperti pangan, pendidikan, dan kesehatan.",
-                    fakta: "Ketimpangan Ekonomi Ekstrem", r_val: 88,
-                    detail: [
-                        {sub: "Akar Penyebab", isi: "Akses modal usaha terpusat, upah minimum belum mencukupi inflasi, serta minimnya jaringan pengaman sosial pedalaman."},
-                        {sub: "Dampak Sistemik", isi: "Penurunan daya beli masyarakat kelas bawah, tingginya angka stunting, dan munculnya permukiman kumuh urban."},
-                        {sub: "Solusi Taktis", isi: "Pemerataan program bantuan langsung bersasar, subsidi pendidikan vokasi, serta insentif usaha mikro daerah tertinggal."}
+                    id: "c1", label: "Ekonomi", color: "#0A84FF", icon: "trending-up",
+                    children: [
+                        { id: "judol", label: "Judi Online & Pinjol", impact: 98, icon: "alert-circle", stats: "Rp 327 T", tag: "Darurat Keuangan",
+                          causes: ["Akses digital ilegal mudah", "Literasi finansial rendah"], 
+                          solutions: ["Satgas Lintas Batas", "Edukasi Fintech di Sekolah"] },
+                        { id: "neet", label: "Gen Z Menganggur", impact: 82, icon: "user-minus", stats: "9.9 Juta", tag: "Krisis Tenaga Kerja",
+                          causes: ["Mismatch skill industri", "Otomatisasi"], 
+                          solutions: ["Revitalisasi SMK", "Subsidi Startup Inkubasi"] }
                     ]
                 },
                 {
-                    id: "isu_kerja", label: "Pengangguran & Kerja", icon: "user-x", color: "#ff9f0a",
-                    desc: "Ketidaksesuaian keterampilan (mismatch) antara lulusan baru (fresh graduate) dan kebutuhan industri memicu peningkatan angka pengangguran. Hal ini sering kali berdampak pada lonjakan angka kriminalitas.",
-                    fakta: "Skill Gap & Lapangan Kerja", r_val: 82,
-                    detail: [
-                        {sub: "Akar Penyebab", isi: "Kurikulum institusi pendidikan tertinggal jauh dibanding laju otomatisasi industri modern dan perkembangan teknologi digital."},
-                        {sub: "Dampak Sistemik", isi: "Ledakan kasus judi online, penipuan digital, serta kriminalitas jalanan akibat hilangnya opsi pendapatan legal."},
-                        {sub: "Solusi Taktis", isi: "Kemitraan wajib antara sektor industri dengan SMK/Universitas, kartu prakerja adaptif, dan inkubasi bisnis kreatif madya."}
+                    id: "c2", label: "Kesehatan", color: "#FF375F", icon: "heart",
+                    children: [
+                        { id: "stunting", label: "Stunting Nasional", impact: 75, icon: "baby", stats: "21.5%", tag: "Ancaman SDM",
+                          causes: ["Kurang gizi kronis", "Sanitasi buruk"], 
+                          solutions: ["Pemberian Protein Gratis", "Audit Sanitasi Desa"] },
+                        { id: "mental", label: "Krisis Mental Health", impact: 68, icon: "brain", stats: "1 dari 5", tag: "Kesehatan Jiwa",
+                          causes: ["Tekanan Media Sosial", "Stigma Konseling"], 
+                          solutions: ["Psikolog di Puskesmas", "Kurikulum Empati"] }
                     ]
                 },
                 {
-                    id: "isu_edu", label: "Pendidikan Rendah", icon: "graduation-cap", color: "#bf5af2",
-                    desc: "Kesenjangan fasilitas dan kualitas pengajaran antara kota besar dan daerah pelosok masih menjadi tantangan besar, yang berujung pada tingginya angka putus sekolah.",
-                    fakta: "Ketimpangan Mutu Belajar", r_val: 75,
-                    detail: [
-                        {sub: "Akar Penyebab", isi: "Distribusi guru kompeten tidak merata, rusaknya infrastruktur sekolah daerah 3T, dan tingginya biaya penunjang edukasi."},
-                        {sub: "Dampak Sistemik", isi: "Rendahnya daya saing angkatan kerja global dan terjebaknya siklus kemiskinan antar generasi (intergenerational poverty)."},
-                        {sub: "Solusi Taktis", isi: "Digitalisasi bahan ajar nasional, tunjangan khusus berlipat ganda untuk guru pelosok, dan perluasan jangkauan beasiswa penuh."}
+                    id: "c3", label: "Lingkungan", color: "#30D158", icon: "leaf",
+                    children: [
+                        { id: "polusi", label: "Polusi Udara", impact: 91, icon: "wind", stats: "AQI 160+", tag: "Krisis Urban",
+                          causes: ["PLTU Batu Bara", "Emisi Kendaraan"], 
+                          solutions: ["Transisi Bus Listrik", "Pajak Karbon Tinggi"] },
+                        { id: "plastic", label: "Sampah Plastik", impact: 84, icon: "trash-2", stats: "12.6 Juta Ton", tag: "Ekosistem Laut",
+                          causes: ["Single-use plastic", "Sistem Waste Management buruk"], 
+                          solutions: ["Circular Economy", "Larangan Plastik Nasional"] }
                     ]
                 },
                 {
-                    id: "isu_lingkungan", label: "Kerusakan Lingkungan", icon: "leaf", color: "#30d158",
-                    desc: "Masalah seperti kebakaran hutan, polusi udara di kota-kota besar, dan pengelolaan sampah yang buruk menimbulkan ancaman serius terhadap ekosistem dan kesehatan publik.",
-                    fakta: "Krisis Ekologis Makro", r_val: 85,
-                    detail: [
-                        {sub: "Akar Penyebab", isi: "Eksploitasi lahan berlebih tanpa sanksi tegas, buruknya manajemen limbah industri korporasi, serta kultur minim daur ulang."},
-                        {sub: "Dampak Sistemik", isi: "Lonjakan penderita penyakit ISPA, krisis air bersih perkotaan, dan kerugian finansial akibat bencana tahunan."},
-                        {sub: "Solusi Taktis", isi: "Pemberlakuan pajak karbon ketat, modernisasi tempat pembuangan akhir (TPA) sanitasi, dan penegakan hukum bagi pelaku deforestasi."}
-                    ]
-                },
-                {
-                    id: "isu_korupsi", label: "Tindak Pidana Korupsi", icon: "gavel", color: "#ff375f",
-                    desc: "Masalah ini masih menjadi salah satu tantangan terbesar penegakan hukum di Indonesia, yang menghambat pembangunan dan merugikan keuangan negara.",
-                    fakta: "Kebocoran Anggaran Negara", r_val: 94,
-                    detail: [
-                        {sub: "Akar Penyebab", isi: "Sistem pendanaan politik lokal yang mahal, ringannya sanksi vonis hukum bagi koruptor, serta lemahnya transparansi birokrasi pengadaan."},
-                        {sub: "Dampak Sistemik", isi: "Pembangunan infrastruktur publik menjadi terbengkalai, kualitas pelayanan publik menurun, dan hilangnya kepercayaan investor asing."},
-                        {sub: "Solusi Taktis", isi: "Implementasi penuh sistem e-budgeting transparan, pengesahan RUU Perampasan Aset, dan penguatan lembaga pengawas independen."}
-                    ]
-                },
-                {
-                    id: "isu_penduduk", label: "Masalah Kependudukan", icon: "users", color: "#54e3ff",
-                    desc: "Pertumbuhan penduduk yang tidak merata dan tingginya urbanisasi menciptakan masalah baru, seperti pemukiman kumuh, kemacetan, dan layanan publik yang tidak memadai.",
-                    fakta: "Ledakan Urbanisasi Tak Terkendali", r_val: 79,
-                    detail: [
-                        {sub: "Akar Penyebab", isi: "Sentralisasi pembangunan ekonomi yang terlalu berfokus di pulau Jawa / kota metropolitan, mengabaikan potensi desa."},
-                        {sub: "Dampak Sistemik", isi: "Kemacetan lalu lintas parah, penumpukan wilayah kumuh padat hunian, dan tidak seimbangnya beban layanan rumah sakit/fasilitas publik."},
-                        {sub: "Solusi Taktis", isi: "Desentralisasi industri manufaktur ke luar daerah, pembangunan kawasan satelit mandiri, dan optimalisasi program dana desa produktif."}
+                    id: "c4", label: "Edukasi & Hukum", color: "#FFD60A", icon: "shield",
+                    children: [
+                        { id: "korupsi", label: "Korupsi Politik", impact: 95, icon: "gavel", stats: "IPK 34", tag: "Governance",
+                          causes: ["Biaya Politik Mahal", "Pengawasan Lemah"], 
+                          solutions: ["RUU Perampasan Aset", "Digitalisasi Anggaran"] },
+                        { id: "ukt", label: "Komersialisasi UKT", impact: 78, icon: "graduation-cap", stats: "Naik 30%", tag: "Akses Belajar",
+                          causes: ["PTN-BH Mandiri", "Subsidi Tidak Merata"], 
+                          solutions: ["Audit Dana Kampus", "KIP Kuliah Masif"] }
                     ]
                 }
             ]
         };
 
-        // --- CORE NAVIGATION ENGINE (OPTIMAL & RINGAN) ---
-        let scale = window.innerWidth < 768 ? 0.45 : 0.8; 
-        let posX = window.innerWidth / (window.innerWidth < 768 ? 2 : 2.5);
+        // --- OPTIMIZED ENGINE ---
+        let scale = window.innerWidth < 768 ? 0.6 : 0.8;
+        let posX = window.innerWidth / 2;
         let posY = window.innerHeight / 2;
-        let isDragging = false, startX, startY;
-
+        let targetX = posX, targetY = posY, targetScale = scale;
+        
         const container = document.getElementById('canvas-container');
         const nodesLayer = document.getElementById('nodes-layer');
         const svgLayer = document.getElementById('svg-layer');
 
         function init() {
-            renderGraph();
-            setupEvents();
-            updateTransform();
-            setupSearch();
+            renderMap();
+            requestAnimationFrame(updateLoop);
+            setupInteractions();
             lucide.createIcons();
         }
 
-        function renderGraph() {
+        // --- RENDER ENGINE (Faster) ---
+        function renderMap() {
             nodesLayer.innerHTML = ''; svgLayer.innerHTML = '';
-            
-            // Render Pusat Map
-            createNode(masterData, 0, 0, true);
+            const center = { x: 0, y: 0 };
+            createNode(data, center.x, center.y, true);
 
-            // Pengaturan sebaran posisi lingkaran/hub agar rapi di desktop & HP
-            const isMobile = window.innerWidth < 768;
-            const radius = isMobile ? 320 : 450;
-            const total = masterData.children.length;
+            const clusterRadius = window.innerWidth < 768 ? 300 : 450;
+            const issueRadius = window.innerWidth < 768 ? 180 : 250;
 
-            masterData.children.forEach((child, i) => {
-                const angle = (i * 2 * Math.PI) / total;
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
+            data.children.forEach((cluster, i) => {
+                const angle = (i * 2 * Math.PI) / data.children.length;
+                const cx = Math.cos(angle) * clusterRadius;
+                const cy = Math.sin(angle) * clusterRadius;
 
-                // Garis SVG ringan lurus linear
-                const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", 3000); line.setAttribute("y1", 3000);
-                line.setAttribute("x2", 3000 + x); line.setAttribute("y2", 3000 + y);
-                line.setAttribute("class", "flow-line");
-                line.setAttribute("stroke", child.color);
-                svgLayer.appendChild(line);
+                drawLink(center.x, center.y, cx, cy, cluster.color);
+                createNode(cluster, cx, cy, false, cluster.color);
 
-                createNode(child, x, y, false);
+                cluster.children.forEach((issue, j) => {
+                    const subAngle = angle + (j - (cluster.children.length - 1) / 2) * 0.5;
+                    const ix = cx + Math.cos(subAngle) * issueRadius;
+                    const iy = cy + Math.sin(subAngle) * issueRadius;
+
+                    drawLink(cx, cy, ix, iy, cluster.color);
+                    createNode(issue, ix, iy, false, cluster.color);
+                });
             });
         }
 
-        function createNode(node, x, y, isRoot) {
+        function createNode(node, x, y, isRoot, color) {
             const div = document.createElement('div');
-            div.className = 'node';
-            div.style.left = `${x}px`; div.style.top = `${y}px`;
+            div.className = `node absolute searching-item`;
+            div.style.left = `${x}px`;
+            div.style.top = `${y}px`;
             div.style.transform = `translate(-50%, -50%)`;
-            div.id = `n-${node.id}`;
-            div.setAttribute('data-text', (node.label + " " + node.desc).toLowerCase());
+            div.setAttribute('data-label', node.label.toLowerCase());
 
-            const card = document.createElement('div');
-            card.className = `node-card ${isRoot ? 'border-zinc-500 bg-zinc-900/90 text-center' : ''}`;
-            card.style.setProperty('--n-color', node.color);
-
-            card.innerHTML = `
-                <div class="flex flex-col ${isRoot ? 'items-center' : ''} gap-2">
-                    <div class="flex justify-between items-center w-full">
-                        <div class="p-1 bg-white/5 rounded-md"><i data-lucide="${node.icon}" style="color:${node.color}" class="w-4 h-4"></i></div>
-                        ${node.r_val ? `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/5" style="color:${node.color}">${node.r_val}%</span>` : ''}
-                    </div>
-                    <p class="text-[11px] md:text-[13px] font-bold leading-tight text-white">${node.label.replace('\n', ' ')}</p>
+            const inner = document.createElement('div');
+            inner.className = `node-card apple-glass border-2`;
+            inner.style.borderColor = color ? `${color}40` : 'rgba(255,255,255,0.1)';
+            
+            inner.innerHTML = `
+                <div class="flex items-center gap-2 mb-2">
+                    <i data-lucide="${node.icon}" class="w-4 h-4" style="color:${color}"></i>
+                    <span class="text-[10px] font-bold opacity-50 uppercase">${node.tag || 'Klaster'}</span>
                 </div>
+                <div class="text-xs md:text-sm font-extrabold leading-tight">${node.label}</div>
+                ${node.stats ? `<div class="mt-2 text-xs font-bold text-blue-400">${node.stats}</div>` : ''}
             `;
 
-            div.appendChild(card);
-            div.onpointerdown = (e) => e.stopPropagation();
-            div.onclick = () => { if(!isDragging) openDrawer(node); };
+            div.onclick = () => {
+                if(node.impact) openDrawer(node, color);
+            };
+
+            div.appendChild(inner);
             nodesLayer.appendChild(div);
         }
 
-        function openDrawer(node) {
-            if(node.id === "pusat") return;
-            
-            document.querySelectorAll('.node-card').forEach(c => c.classList.remove('node-active'));
-            document.querySelector(`#n-${node.id} .node-card`).classList.add('node-active');
-
-            const drawer = document.getElementById('detail-drawer');
-            document.getElementById('d-title').innerText = node.label;
-            
-            const iBox = document.getElementById('d-icon');
-            iBox.style.backgroundColor = `${node.color}15`;
-            iBox.innerHTML = `<i data-lucide="${node.icon}" style="color:${node.color}" class="w-5 h-5"></i>`;
-
-            let html = `
-                <p class="text-xs md:text-sm leading-relaxed text-zinc-300 bg-white/[0.02] p-4 rounded-xl border border-white/5">${node.desc}</p>
-                
-                <div class="space-y-2">
-                    <div class="flex justify-between text-xs font-bold text-zinc-400"><span>Tingkat Keparahan Krisis</span><span>${node.r_val}%</span></div>
-                    <div class="bar-bg"><div class="bar-fill" style="background:${node.color}" data-w="${node.r_val}%"></div></div>
-                </div>
-
-                <div class="space-y-3.5">
-                    ${node.detail.map(d => `
-                        <div class="p-4 bg-white/[0.01] border border-white/[0.03] rounded-xl space-y-1">
-                            <h4 class="text-[11px] font-extrabold uppercase tracking-wider" style="color:${node.color}">${d.sub}</h4>
-                            <p class="text-xs text-zinc-400 leading-relaxed">${d.isi}</p>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            document.getElementById('d-content').innerHTML = html;
-            drawer.classList.add('open');
-            lucide.createIcons();
-
-            setTimeout(() => {
-                const fill = document.querySelector('.bar-fill');
-                if(fill) fill.style.width = fill.getAttribute('data-w');
-            }, 50);
+        function drawLink(x1, y1, x2, y2, color) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            const offset = 2000;
+            line.setAttribute("x1", x1 + offset); line.setAttribute("y1", y1 + offset);
+            line.setAttribute("x2", x2 + offset); line.setAttribute("y2", y2 + offset);
+            line.setAttribute("class", "flow-line");
+            line.setAttribute("stroke", color || "white");
+            svgLayer.appendChild(line);
         }
 
-        // --- SISTEM DRAG & ZOOM PERFORMA TINGGI ---
-        function setupEvents() {
-            viewport.onpointerdown = (e) => {
-                if(e.target.closest('header, aside, button, input')) return;
-                isDragging = true;
-                startX = e.clientX - posX; startY = e.clientY - posY;
-                viewport.setPointerCapture(e.pointerId);
-            };
-            viewport.onpointermove = (e) => {
-                if (!isDragging) return;
-                posX = e.clientX - startX; posY = e.clientY - startY;
-                updateTransform();
-            };
-            viewport.onpointerup = (e) => { isDragging = false; viewport.releasePointerCapture(e.pointerId); };
-            viewport.onwheel = (e) => { e.preventDefault(); zoom(e.deltaY * -0.001); };
-        }
+        // --- SMOOTH ANIMATION LOOP ---
+        function updateLoop() {
+            posX += (targetX - posX) * 0.1;
+            posY += (targetY - posY) * 0.1;
+            scale += (targetScale - scale) * 0.1;
 
-        function zoom(delta) {
-            const old = scale;
-            scale = Math.min(Math.max(window.innerWidth < 768 ? 0.25 : 0.4, scale + delta), 2);
-            const ratio = scale / old;
-            posX = window.innerWidth/2 - (window.innerWidth/2 - posX) * ratio;
-            posY = window.innerHeight/2 - (window.innerHeight/2 - posY) * ratio;
-            updateTransform();
-        }
-
-        function updateTransform() {
-            // Memanfaatkan translate3d agar browser merender langsung via Hardware GPU Acceleration
             container.style.transform = `translate3d(${posX}px, ${posY}px, 0) scale(${scale})`;
+            requestAnimationFrame(updateLoop);
         }
 
-        function reset() {
-            scale = window.innerWidth < 768 ? 0.45 : 0.8;
-            posX = window.innerWidth / (window.innerWidth < 768 ? 2 : 2.5);
-            posY = window.innerHeight / 2;
-            updateTransform();
-        }
+        function setupInteractions() {
+            let isDragging = false;
+            let startX, startY;
 
-        function setupSearch() {
-            document.getElementById('search-box').oninput = (e) => {
-                const q = e.target.value.toLowerCase().trim();
+            window.onpointerdown = (e) => {
+                if(e.target.closest('.apple-glass, button, input')) return;
+                isDragging = true;
+                startX = e.clientX - targetX;
+                startY = e.clientY - targetY;
+            };
+
+            window.onpointermove = (e) => {
+                if(!isDragging) return;
+                targetX = e.clientX - startX;
+                targetY = e.clientY - startY;
+            };
+
+            window.onpointerup = () => isDragging = false;
+            
+            window.onwheel = (e) => {
+                targetScale = Math.min(Math.max(0.3, targetScale - e.deltaY * 0.001), 2);
+            };
+
+            // Search Functionality
+            document.getElementById('search-input').oninput = (e) => {
+                const q = e.target.value.toLowerCase();
+                const body = document.body;
+                if(q.length > 0) body.classList.add('searching');
+                else body.classList.remove('searching');
+
                 document.querySelectorAll('.node').forEach(n => {
-                    const txt = n.getAttribute('data-text');
-                    n.style.opacity = (q === '' || txt.includes(q)) ? '1' : '0.15';
+                    if(n.getAttribute('data-label').includes(q)) n.classList.add('search-match');
+                    else n.classList.remove('search-match');
                 });
             };
         }
 
-        document.getElementById('close-d').onclick = () => document.getElementById('detail-drawer').classList.remove('open');
-        window.onresize = () => reset();
+        function openDrawer(node, color) {
+            const dr = document.getElementById('detail-drawer');
+            const content = document.getElementById('drawer-content');
+            
+            document.getElementById('drawer-title').innerText = node.label;
+            document.getElementById('drawer-icon-box').style.backgroundColor = `${color}20`;
+            document.getElementById('drawer-icon-box').innerHTML = `<i data-lucide="${node.icon}" style="color:${color}"></i>`;
+
+            content.innerHTML = `
+                <div class="flex items-center justify-between bg-white/5 p-4 rounded-2xl">
+                    <div>
+                        <p class="text-[10px] font-black opacity-50 uppercase mb-1">Status Dampak</p>
+                        <p class="text-2xl font-black" style="color:${color}">${node.stats}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-black opacity-50 uppercase mb-1">Urgensi</p>
+                        <p class="text-2xl font-black">${node.impact}%</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">Akar Masalah</h4>
+                    <div class="space-y-2">
+                        ${node.causes.map(c => `<div class="p-3 bg-white/5 rounded-xl border border-white/5 flex gap-3">
+                            <span class="text-blue-500">●</span> ${c}
+                        </div>`).join('')}
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-3">Rencana Solusi</h4>
+                    <div class="space-y-2">
+                        ${node.solutions.map(s => `<div class="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3">
+                            <i data-lucide="check-circle-2" class="w-4 h-4 text-blue-500"></i> ${s}
+                        </div>`).join('')}
+                    </div>
+                </div>
+            `;
+            
+            dr.classList.add('open');
+            lucide.createIcons();
+        }
+
+        function applyZoom(delta) { targetScale = Math.min(Math.max(0.3, targetScale + delta), 2); }
+        function resetView() { targetX = window.innerWidth/2; targetY = window.innerHeight/2; targetScale = window.innerWidth < 768 ? 0.6 : 0.8; }
+        
+        document.getElementById('close-drawer').onclick = () => document.getElementById('detail-drawer').classList.remove('open');
 
         init();
     </script>
